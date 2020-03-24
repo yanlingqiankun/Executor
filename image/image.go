@@ -2,6 +2,7 @@ package image
 
 import (
 	"encoding/json"
+	"github.com/docker/docker/client"
 	"github.com/yanlingqiankun/Executor/conf"
 	"github.com/yanlingqiankun/Executor/logging"
 	"io/ioutil"
@@ -9,17 +10,24 @@ import (
 	"path/filepath"
 )
 
-type imageDB map[string]image
+type imageDB map[string]*ImageEntry
 
 var logger = logging.GetLogger("image")
 var db imageDB
 var imagefile string
+var cli *client.Client
 
 func init () {
+	var err error
+	db = make(map[string]*ImageEntry)
 	rootPath := conf.GetString("RootPath")
 	imagefile = filepath.Join(rootPath, "images", "imagedb.json")
 	if err := load(); err != nil {
 		logger.WithError(err).Errorf("failed to load image infomation")
+	}
+	cli, err = client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		logger.WithError(err).Error("failed to get docker client")
 	}
 }
 
@@ -52,4 +60,10 @@ func(db *imageDB) save() error {
 	}
 	_, err = file.Write(imageJson)
 	return err
+}
+
+func (image *ImageEntry) GetType() (isDocker bool, imageType string) {
+	isDocker = image.IsDockerImage
+	imageType = image.Type
+	return
 }

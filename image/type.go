@@ -1,16 +1,21 @@
 package image
 
-import "time"
-
-const (
-	TYPE_DOCKER_RAW = 1
-	TYPE_DOCKER_LAYER = 2
-	TYPE_KVM_IOS = 3
+import (
+	libvirtxml "github.com/libvirt/libvirt-go-xml"
+	"time"
 )
 
-type image struct {
-	Name string				`json:"name"`
-	CreateTime time.Time	`json:"create-time"`
-	sum string 				`json:"sha256"`
-	Type int 				`json:"type"`
+type ImageEntry struct {
+	ID            string            `json:"id"`
+	CreateTime    time.Time         `json:"create-time"`
+	Type          string            `json:"type"`		// docker_save, docker_raw, kvm_ios, kvm_qcow2
+	IsDockerImage bool              `json:"is_docker_image"`
+	Counter       int 				`json:"counter"`
+}
+
+type Image interface {
+	Remove() error
+	Rename() error
+	GetType() error
+	GetConf() (libvirtxml.Domain, error)
 }
