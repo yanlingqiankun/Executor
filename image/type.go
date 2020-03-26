@@ -1,11 +1,11 @@
 package image
 
 import (
-	libvirtxml "github.com/libvirt/libvirt-go-xml"
 	"time"
 )
 
 type ImageEntry struct {
+	Name          string            `json:"name"`
 	ID            string            `json:"id"`
 	CreateTime    time.Time         `json:"create-time"`
 	Type          string            `json:"type"`		// docker_save, docker_raw, kvm_ios, kvm_qcow2
@@ -17,5 +17,4 @@ type Image interface {
 	Remove() error
 	Rename() error
 	GetType() error
-	GetConf() (libvirtxml.Domain, error)
 }

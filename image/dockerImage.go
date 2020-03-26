@@ -67,6 +67,7 @@ func PullDockerImage(ctx context.Context, name string) error {
 		return err
 	}
 	db[name] = &ImageEntry{
+		Name:          name,
 		ID:            imageId,
 		CreateTime:    time.Now(),
 		Type:          "docker_pull",

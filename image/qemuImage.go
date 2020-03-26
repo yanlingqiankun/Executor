@@ -25,7 +25,8 @@ func QEMUImageSave(imageName string, imageType string,  fileName string) error {
 			return err
 		}
 		db[imageName] = &ImageEntry{
-			ID:            imageName,
+			Name:          imageName,
+			ID:            imageId,
 			CreateTime:    time.Now(),
 			Type:          imageType,
 			IsDockerImage: false,

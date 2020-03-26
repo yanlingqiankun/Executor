@@ -2,6 +2,7 @@ package image
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/docker/docker/client"
 	"github.com/yanlingqiankun/Executor/conf"
 	"github.com/yanlingqiankun/Executor/logging"
@@ -66,4 +67,24 @@ func (image *ImageEntry) GetType() (isDocker bool, imageType string) {
 	isDocker = image.IsDockerImage
 	imageType = image.Type
 	return
+}
+
+func (image *ImageEntry) Remove() error {
+	if _, ok := db[image.Name]; !ok {
+		return fmt.Errorf("can not find the image")
+	}
+	delete(db, image.Name)
+	logger.Info("The image %s has been removed", image.Name)
+	return nil
+}
+
+func (image *ImageEntry) Rename(name string) error {
+	if _, ok := db[image.Name]; !ok {
+		return fmt.Errorf("can not find the image")
+	}
+
+	delete(db, image.Name)
+	image.Name = name
+	db[name] = image
+	return nil
 }
