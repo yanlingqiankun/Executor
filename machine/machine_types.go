@@ -1,7 +1,7 @@
 package machine
 
 import (
-	"github.com/yanlingqiankun/Executor/proxy"
+	"github.com/yanlingqiankun/Executor/network/proxy"
 )
 
 type machine interface {
@@ -120,7 +120,3 @@ type Volume struct {
 	Name        string `json:"name"`
 	Type        string `json:"type"`
 }
-
-
-
-
