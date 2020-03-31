@@ -2,7 +2,6 @@ package machine
 
 import (
 	"github.com/docker/docker/api/types/container"
-	"github.com/yanlingqiankun/Executor/machine/types"
 )
 
 
@@ -18,7 +17,7 @@ const (
 
 type BaseContainer struct {
 	ImageID          string
-	RuntimeConfig    *types.RuntimeConfig
+	RuntimeConfig    *RuntimeConfig
 	ContainerConfig  *container.Config  `json:"container_config"`
 	HostConfig 	     *container.HostConfig  `json:"host_config"`
 }

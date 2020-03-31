@@ -1,8 +1,8 @@
 package machine
 
 import (
+	"context"
 	"github.com/docker/docker/api/types/container"
-	"github.com/yanlingqiankun/Executor/machine/types"
 	"github.com/yanlingqiankun/Executor/network/proxy"
 )
 
@@ -62,7 +62,7 @@ func (container *BaseContainer) SetHostname(name string) {
 	container.ContainerConfig.Hostname = name
 }
 
-func (container *BaseContainer) SetVolumes(volumes []*types.Volume) {
+func (container *BaseContainer) SetVolumes(volumes []*Volume) {
 	if volumes == nil || len(volumes) == 0 {
 		return
 	}
@@ -127,4 +127,22 @@ func (container *BaseContainer) SetExposedPorts(info []proxy.ProxyInfo) {
 
 func (container *BaseContainer) SetHosts(hosts []string) {
 	container.HostConfig.ExtraHosts = hosts
+}
+
+func (container *BaseContainer) SetTTYSize(width, height uint16) {
+
+}
+
+func (container *BaseContainer) GetBase() (*Base, error) {
+	data, err := cli.ContainerInspect(context.Background(), container.ContainerConfig.Domainname)
+	if err != nil {
+		return nil, err
+	}
+	return &Base{
+		IsDocker:       true,
+		ImageID:        container.ImageID,
+		ID:             data.ID,
+		Name:           data.Name,
+		RuntimeSetting: container.RuntimeConfig,
+	}, nil
 }

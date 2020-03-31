@@ -1,27 +1,22 @@
 package machine
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/docker/docker/pkg/stringid"
 	"github.com/vishvananda/netlink"
-	"github.com/yanlingqiankun/Executor/conf"
-	"github.com/yanlingqiankun/Executor/machine/types"
-	"io/ioutil"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"runtime"
 	"strconv"
 )
 
-func (container *BaseContainer) SetNetworks(networks []*types.Network) {
+func (container *BaseContainer) SetNetworks(networks []*Network) {
 	for idx, nw := range networks {
 		if nw.Name == "" {
 			nw.Name = "eth" + strconv.Itoa(idx)
 		}
 
 		if nw.HostInterfaceName == "" {
-			nw.HostInterfaceName = "veth" + container.ID[:6] + strconv.Itoa(idx)
+			nw.HostInterfaceName = "veth" + stringid.GenerateRandomID()[:6] + strconv.Itoa(idx)
 		}
 
 	}
@@ -57,7 +52,7 @@ func (nw *Network) connectBridge() error {
 	// 配置容器内部的接口
 	vethPair := netlink.Veth{
 		LinkAttrs: linkAttrs,
-		PeerName:  "isl-" + nw.HostInterfaceName,
+		PeerName:  "exl-" + nw.HostInterfaceName,
 	}
 
 	// 调用 net link LinkAdd 方法创建出这个 veth 接口对
@@ -76,7 +71,7 @@ func (nw *Network) connectBridge() error {
 }
 
 func (nw *Network) setIn(pid string) error {
-	device, err := netlink.LinkByName("isl-" + nw.HostInterfaceName)
+	device, err := netlink.LinkByName("exl-" + nw.HostInterfaceName)
 	f, err := os.OpenFile(fmt.Sprintf("/proc/%s/ns/net", pid), os.O_RDONLY, 0)
 	defer f.Close()
 	if err != nil {
@@ -93,54 +88,4 @@ func (nw *Network) setIn(pid string) error {
 	}
 
 	return nil
-}
-
-func (container *BaseContainer) configNetwork() error {
-	if container.RuntimeConfig.Networks == nil || len(container.RuntimeConfig.Networks) == 0 {
-		return nil
-	}
-	// 将每个 container 连上网桥
-	// 并把另外一端放到 container 里面
-	for _, nw := range container.RuntimeConfig.Networks {
-		if err := nw.connectBridge(); err != nil {
-			logger.WithError(err).Error(nw.HostInterfaceName + " failed to connect bridge")
-			return err
-		}
-
-		if err := nw.setIn(strconv.Itoa(container.process.Pid)); err != nil {
-			logger.WithError(err).Error("failed to set veth in container")
-			return err
-		}
-
-	}
-
-	config := networkConfig{
-		Pid:      strconv.Itoa(container.process.Pid),
-		Networks: container.RuntimeSetting.Networks,
-		Routes:   container.RuntimeSetting.Routes,
-	}
-	data, err := json.MarshalIndent(config, "", "\t")
-	if err != nil {
-		logger.WithError(err).Error("failed to generate container network config data")
-		return err
-	}
-
-	configPath := filepath.Join(filepath.Dir(container.Rootfs), "network.json")
-
-	if err = ioutil.WriteFile(configPath, data, 0600); err != nil {
-		logger.WithError(err).Error("failed to write network.json for islandNet")
-		return err
-	}
-
-	islandNet := exec.Command(conf.GetString("IslandNet"), configPath, conf.GetString("LogLevel"))
-	islandNet.Stdout = os.Stdout
-	islandNet.Stderr = os.Stderr
-
-	if err = islandNet.Run(); err != nil {
-		logger.WithError(err).Error("failed to run ", islandNet.String())
-		return err
-	}
-
-	return nil
-
 }
