@@ -24,7 +24,7 @@ func QEMUImageSave(imageName string, imageType string,  fileName string) error {
 		if err = copy(fileName, filepath.Join(imageDir, imageId)); err != nil {
 			return err
 		}
-		db[imageName] = &ImageEntry{
+		db[imageId] = &ImageEntry{
 			Name:          imageName,
 			ID:            imageId,
 			CreateTime:    time.Now(),

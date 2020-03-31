@@ -88,3 +88,24 @@ func (image *ImageEntry) Rename(name string) error {
 	db[name] = image
 	return nil
 }
+
+func GetImageType (imageID string) string {
+	if image, ok := db[imageID]; ok {
+		return image.Type
+	}
+	return ""
+}
+
+// method to get imageId of a name or id
+func CheckNameOrID (args string) string {
+	if image, ok := db[args]; ok {
+		return image.ID
+	} else {
+		for key, value := range db {
+			if value.Name == args {
+				return key
+			}
+		}
+	}
+	return ""
+}

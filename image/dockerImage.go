@@ -66,7 +66,7 @@ func PullDockerImage(ctx context.Context, name string) error {
 	if err != nil {
 		return err
 	}
-	db[name] = &ImageEntry{
+	db[imageId] = &ImageEntry{
 		Name:          name,
 		ID:            imageId,
 		CreateTime:    time.Now(),
