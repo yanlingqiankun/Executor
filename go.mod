@@ -4,12 +4,14 @@ go 1.13
 
 require (
 	github.com/BurntSushi/toml v0.3.1
+	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/containerd/containerd v1.3.3 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
+	github.com/golang/protobuf v1.3.5 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/libvirt/libvirt-go v6.0.0+incompatible
 	github.com/libvirt/libvirt-go-xml v6.0.0+incompatible
@@ -19,12 +21,12 @@ require (
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sirupsen/logrus v1.5.0
-	github.com/stretchr/objx v0.1.1 // indirect
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59 // indirect
-	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
-	golang.org/x/sys v0.0.0-20200327173247-9dae0f8f5775 // indirect
-	google.golang.org/grpc v1.27.1 // indirect
+	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
+	golang.org/x/sys v0.0.0-20200331124033-c3d80250170d // indirect
+	google.golang.org/genproto v0.0.0-20200331122359-1ee6d9798940 // indirect
+	google.golang.org/grpc v1.28.0 // indirect
 )
 
 replace github.com/docker/docker v1.13.1 => github.com/docker/engine v0.0.0-20191113042239-ea84732a7725
