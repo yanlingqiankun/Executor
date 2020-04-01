@@ -1,7 +1,6 @@
 package machine
 
 import (
-	"context"
 	"encoding/xml"
 	"github.com/docker/docker/pkg/stringid"
 	libvirtxml "github.com/libvirt/libvirt-go-xml"

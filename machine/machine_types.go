@@ -6,7 +6,7 @@ import (
 
 type Machine interface {
 	Start() error                   // 运行machine
-	Kill(string, bool) error        // 使用指定的信号来停止一个容器
+	Kill(string) error              // 使用指定的信号来停止一个容器
 	Pause() error                   // 暂停
 	Unpause() error                 // 恢复
 	Delete() error                  // 删除这个machine所占用的资源
@@ -40,5 +40,3 @@ type Base struct {
 	Name           string          `json:"name"` // 名字
 	RuntimeSetting *RuntimeConfig  `json:"runtime_config"` // 运行配置
 }
-
-

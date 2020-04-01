@@ -7,7 +7,6 @@ import (
 	"github.com/vishvananda/netns"
 	"github.com/yanlingqiankun/Executor/conf"
 	"github.com/yanlingqiankun/Executor/logging"
-	"log"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -33,6 +32,70 @@ func init() {
 		logger.Fatalf("failed to connect to qemu")
 	}
 	db.init()
+}
+
+func GetMachine(id string) (Machine, error) {
+	machine, ok := db.getItem(id)
+	if !ok {
+		return nil, fmt.Errorf("can't find the machine")
+	}
+	return machine.machine, nil
+}
+
+func (m *Base) Start() error {
+	if m.IsDocker {
+		return StartContainer(m.ID)
+	} else {
+		return StartVM(m.ID)
+	}
+}
+
+func (m *Base) Kill(string) error {
+	if m.IsDocker {
+		return KillContainer(m.ID, "SIGKILL")
+	} else {
+		return StartVM(m.ID)
+	}
+}
+
+func (m *Base) Pause() error {
+	if m.IsDocker {
+		return PauseContainer(m.ID)
+	} else {
+		return PauseVM(m.ID)
+	}
+}
+
+func (m *Base) Unpause() error {
+	if m.IsDocker {
+		return UnpauseContainer(m.ID)
+	} else {
+		return UnpauseVM(m.ID)
+	}
+}
+
+func (m *Base) Delete() error {
+	if m.IsDocker {
+		return DeleteContainer(m.ID)
+	} else {
+		return DeleteVM(m.ID)
+	}
+}
+
+func (m *Base) Stop(timeout int) error {
+	if m.IsDocker {
+		return StopContainer(timeout, m.ID)
+	} else {
+		return StartVM(m.ID)
+	}
+}
+
+func (m *Base) Restart(timeout int) error {
+	if m.IsDocker {
+		return RestartContainer(timeout, m.ID)
+	} else {
+		return StartVM(m.ID)
+	}
 }
 
 func (container *Base) configNetwork() error {
@@ -83,7 +146,7 @@ func CreateMachine(imageID string, machineType string) (Factory, error) {
 	if machineType == "container" {
 		return CreateContainer(imageID), nil
 	} else if machineType == "vm" {
-		return CreateVM(imageID)
+		return CreateVM(imageID), nil
 	} else {
 		logger.Errorf("Error machine type")
 		return nil, fmt.Errorf("Error machine type")

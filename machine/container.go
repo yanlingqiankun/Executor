@@ -52,7 +52,7 @@ func UnpauseContainer(containerID string) error {
 	return nil
 }
 
-func KillContaienr(containerID string, signal string) error {
+func KillContainer(containerID string, signal string) error {
 	if err := cli.ContainerKill(context.Background(), containerID, signal); err != nil {
 		return fmt.Errorf("failed to kill container %s with error : %s", containerID, err.Error())
 	}
@@ -64,7 +64,7 @@ func prestartHookContainer(containerID string) error {
 	return nil
 }
 
-func poststopHookContaienr(containerID string) {
+func poststopHookContainer(containerID string) {
 	return
 }
 
