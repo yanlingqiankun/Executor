@@ -10,7 +10,9 @@ type configType struct {
 	LogLevel      string
 	APIPath       string
 	RootPath      string
-	storeNode	  string
+	StoreNode	  string
+	DockerRegistryPort 	string
+	VMType        string
 }
 
 // 默认配置
@@ -18,13 +20,15 @@ var sysConfig = configType{
 	LogLevel:      "info",
 	APIPath:       "unix:///var/run/Executor.sock",
 	RootPath:      "/var/lib/Executor",
-	storeNode:     "127.0.0.1",
+	StoreNode:     "127.0.0.1",
+	DockerRegistryPort: "5000",
+	VMType:        "kvm",
 }
 
 var logger = logging.GetLogger("conf")
 
 func init() {
-	configFilePath := "Executor.conf"
+	configFilePath := "/media/shado/Downloads/code/goCode/Executor/Executor.conf"
 	if _, err := toml.DecodeFile(configFilePath, &sysConfig); err != nil {
 		logger.WithError(err).WithField("path", configFilePath).Fatal("failed to load configurations")
 	} else {
