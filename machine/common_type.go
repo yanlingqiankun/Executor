@@ -2,6 +2,12 @@ package machine
 
 import "github.com/yanlingqiankun/Executor/network/proxy"
 
+// volume permission
+const (
+	ReadPermission  uint8 = 1
+	WritePermission uint8 = 2
+)
+
 type ContainerVolume struct {
 	Destination string `json:"destination"`
 	RW          uint8  `json:"rw"`

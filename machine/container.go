@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func Start(containerID string) error {
+func StartContainer(containerID string) error {
 	if checkStatus(containerID, StatusRunning, StatusRemoving) {
 		return fmt.Errorf("container is Running, don't start a running container")
 	}
@@ -19,7 +19,7 @@ func Start(containerID string) error {
 	return nil
 }
 
-func Delete(containerID string) error {
+func DeleteContainer(containerID string) error {
 	if checkStatus(containerID, StatusRunning) {
 		return fmt.Errorf("can not delete running container")
 	}
@@ -31,7 +31,7 @@ func Delete(containerID string) error {
 	return nil
 }
 
-func Pause(containerID string) error {
+func PauseContainer(containerID string) error {
 	if !checkStatus(containerID, StatusRunning) {
 		return fmt.Errorf("can not pause running container")
 	}
@@ -42,7 +42,7 @@ func Pause(containerID string) error {
 	return nil
 }
 
-func Unpause(containerID string) error {
+func UnpauseContainer(containerID string) error {
 	if !checkStatus(containerID, StatusPaused) {
 		return fmt.Errorf("can not resume paused container")
 	}
@@ -52,23 +52,23 @@ func Unpause(containerID string) error {
 	return nil
 }
 
-func Kill(containerID string, signal string) error {
+func KillContaienr(containerID string, signal string) error {
 	if err := cli.ContainerKill(context.Background(), containerID, signal); err != nil {
 		return fmt.Errorf("failed to kill container %s with error : %s", containerID, err.Error())
 	}
 	return nil
 }
 
-func prestartHook(containerID string) error {
+func prestartHookContainer(containerID string) error {
 	// todo network and volume
 	return nil
 }
 
-func poststopHook(containerID string) {
+func poststopHookContaienr(containerID string) {
 	return
 }
 
-func Stop(timeout int, containerID string) error {
+func StopContainer(timeout int, containerID string) error {
 	duration := time.Duration(timeout)*time.Second
 	if err := cli.ContainerStop(context.Background(), containerID, &duration); err != nil {
 		logger.WithError(err).Error("failed to stop container")
@@ -77,7 +77,7 @@ func Stop(timeout int, containerID string) error {
 	return nil
 }
 
-func Restart(timeout int, containerID string) error {
+func RestartContainer(timeout int, containerID string) error {
 	duration := time.Duration(timeout) * time.Second
 	if err := cli.ContainerRestart(context.Background(), containerID, &duration); err != nil {
 		logger.WithError(err).Error("failed to restart container")
