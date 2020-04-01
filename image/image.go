@@ -89,7 +89,7 @@ func (image *ImageEntry) Rename(name string) error {
 	return nil
 }
 
-func GetImageType (imageID string) string {
+func GetImageType(imageID string) string {
 	if image, ok := db[imageID]; ok {
 		return image.Type
 	}
