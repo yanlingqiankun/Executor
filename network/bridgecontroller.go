@@ -106,23 +106,11 @@ func createBridgeInterface(bridgeName, ip, mask string) error {
 		Forward:             nil,
 		Bridge:              &libvirtxml.NetworkBridge{
 			Name:            bridgeName,
-			STP:             "",
+			STP:             "on",
 			Delay:           "",
 			MACTableManager: "",
 			Zone:            "",
 		},
-		MTU:                 nil,
-		MAC:                 nil,
-		Domain:              nil,
-		DNS:                 nil,
-		VLAN:                nil,
-		Bandwidth:           nil,
-		PortOptions:         nil,
-		IPs:                 nil,
-		Routes:              nil,
-		VirtualPort:         nil,
-		PortGroups:          nil,
-		DnsmasqOptions:      nil,
 	}
 	
 	netXML.IPs = make([]libvirtxml.NetworkIP, 1)
@@ -132,7 +120,11 @@ func createBridgeInterface(bridgeName, ip, mask string) error {
 		Netmask:  mask,
 		Prefix:   0,
 		LocalPtr: "",
-		DHCP:     nil,
+		DHCP:     &libvirtxml.NetworkDHCP{
+			Ranges: nil,
+			Hosts:  nil,
+			Bootp:  nil,
+		},
 		TFTP:     nil,
 	}
 

@@ -2,9 +2,11 @@ package network
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"github.com/Unixeno/TheMoon/logging"
 	"github.com/libvirt/libvirt-go"
+	libvirtxml "github.com/libvirt/libvirt-go-xml"
 	"github.com/vishvananda/netlink"
 	"github.com/yanlingqiankun/Executor/conf"
 	"net"
@@ -130,7 +132,7 @@ func Init() error {
 	return nil
 }
 
-func createNetwork(subnet, name, gateway string) error {
+func CreateNetwork(subnet, name, gateway string) error {
 	if _, ok := networks[name]; ok {
 		return fmt.Errorf("The network exists")
 	}
@@ -190,7 +192,7 @@ func listNetwork() {
 	}
 }
 
-func deleteNetwork(networkName string) error {
+func DeleteNetwork(networkName string) error {
 	nw, ok := networks[networkName]
 	if !ok {
 		return fmt.Errorf("No Such Network: %s", networkName)
@@ -254,7 +256,7 @@ func AllocateIP(netname string) (net.IP, error) {
 	return ipAllocator.allocate(nw.Subnet)
 }
 
-func RegisterIP(netname string, ipaddr net.IP) error {
+func RegisterIP(netname string, VMName string, ipaddr net.IP) error {
 	//check if the ip valid
 	if err := Init(); err != nil {
 		return err
@@ -265,11 +267,30 @@ func RegisterIP(netname string, ipaddr net.IP) error {
 	}
 	if !nw.Subnet.Contains(ipaddr) {
 		return fmt.Errorf("The IP is invalid")
+	}
+	libhost := libvirtxml.NetworkDHCPHost{
+		XMLName: xml.Name{},
+		ID:      VMName,
+		MAC:     "",
+		Name:    VMName,
+		IP:      ipaddr.String(),
+	}
+	hostStr, err := libhost.Marshal()
+	if err != nil {
+		return err
+	}
+	libnet, err := libconn.LookupNetworkByName(netname)
+	if err != nil {
+		return err
+	}
+	err = libnet.Update(libvirt.NETWORK_UPDATE_COMMAND_ADD_FIRST,libvirt.NETWORK_SECTION_IP_DHCP_HOST, -1,hostStr,libvirt.NETWORK_UPDATE_AFFECT_LIVE | libvirt.NETWORK_UPDATE_AFFECT_CONFIG)
+	if err != nil {
+		return err
 	}
 	return ipAllocator.register(nw.Subnet, ipaddr)
 }
 
-func ReleaseIP(netname string, ipaddr net.IP) error {
+func ReleaseIP(netname string, VMName string, ipaddr net.IP) error {
 	//check if the ip valid
 	if err := Init(); err != nil {
 		return err
@@ -280,6 +301,25 @@ func ReleaseIP(netname string, ipaddr net.IP) error {
 	}
 	if !nw.Subnet.Contains(ipaddr) {
 		return fmt.Errorf("The IP is invalid")
+	}
+	libhost := libvirtxml.NetworkDHCPHost{
+		XMLName: xml.Name{},
+		ID:      VMName,
+		MAC:     "",
+		Name:    VMName,
+		IP:      ipaddr.String(),
+	}
+	hostStr, err := libhost.Marshal()
+	if err != nil {
+		return err
+	}
+	libnet, err := libconn.LookupNetworkByName(netname)
+	if err != nil {
+		return err
+	}
+	err = libnet.Update(libvirt.NETWORK_UPDATE_COMMAND_DELETE,libvirt.NETWORK_SECTION_IP_DHCP_HOST, -1,hostStr,libvirt.NETWORK_UPDATE_AFFECT_LIVE | libvirt.NETWORK_UPDATE_AFFECT_CONFIG)
+	if err != nil {
+		return err
 	}
 	return ipAllocator.release(nw.Subnet, &ipaddr)
 }
