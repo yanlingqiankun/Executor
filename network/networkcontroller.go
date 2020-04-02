@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/Unixeno/TheMoon/logging"
 	"github.com/libvirt/libvirt-go"
 	libvirtxml "github.com/libvirt/libvirt-go-xml"
 	"github.com/vishvananda/netlink"
 	"github.com/yanlingqiankun/Executor/conf"
+	"github.com/yanlingqiankun/Executor/logging"
+	"github.com/yanlingqiankun/Executor/util"
 	"net"
 	"os"
 	"path"
@@ -40,6 +41,13 @@ func init() {
 	if err != nil {
 		logger.Fatalf("failed to connect to qemu")
 	}
+	if err = Init(); err != nil {
+		logger.Fatal("failed to init network : ", err.Error())
+	}
+	if err = ipAllocator.Init(); err != nil {
+		logger.Fatal(err.Error())
+	}
+	logger.Debug("network init")
 }
 
 func (nw *Network) dump(dumpPath string) error {
@@ -122,9 +130,8 @@ func Init() error {
 		if err := nw.load(nwPath); err != nil {
 			return fmt.Errorf("error load network: %s", err)
 		}
-
-		if bridge, _ := netlink.LinkByName(nw.Driver); bridge != nil {
-			networks[nw.Name] = nw
+		networks[nw.Name] = nw
+		if bridge, _ := libconn.LookupNetworkByName(nw.Driver); bridge != nil {
 			return nil
 		}
 		return nw.createBridge()
@@ -144,7 +151,7 @@ func CreateNetwork(subnet, name, gateway string) error {
 	if gateway == "" {
 		tmp, err := ipAllocator.allocate(cidr)
 		if err != nil {
-			fmt.Println("failed to alloc ip for network")
+			logger.Error("failed to alloc ip for network")
 			return err
 		}
 		gatewayIP = tmp
@@ -192,14 +199,22 @@ func listNetwork() {
 	}
 }
 
-func DeleteNetwork(networkName string) error {
+func DeleteNetwork(networkName string, force bool) error {
 	nw, ok := networks[networkName]
 	if !ok {
 		return fmt.Errorf("No Such Network: %s", networkName)
 	}
+	if !force {
+		if ipAllocator.getCounter(nw.Subnet.String()) > 1 {
+			return fmt.Errorf("can remove a network in use, please use -f to forcely remove it")
+		}
+	}
 
 	if err := deleteBridge(networks[networkName]); err != nil {
 		return fmt.Errorf("Error Remove Network DriverError: %s", err)
+	}
+	if err := ipAllocator.releaseSubnet(nw.Subnet.String()); err != nil {
+		return err
 	}
 
 	return nw.remove(defaultNetworkPath)
@@ -229,7 +244,6 @@ func inspectNetwork(networkName string) error {
 
 //返回一个network的信息，如果没有则返回nil
 func GetNetworkInfo(netname string) *NetworkInfo {
-	Init()
 	nw, ok := networks[netname]
 	if !ok {
 		return nil
@@ -246,9 +260,6 @@ func GetNetworkInfo(netname string) *NetworkInfo {
 }
 
 func AllocateIP(netname string) (net.IP, error) {
-	if err := Init(); err != nil {
-		return nil, err
-	}
 	nw, ok := networks[netname]
 	if !ok {
 		return nil, fmt.Errorf("The network is not exists")
@@ -258,9 +269,6 @@ func AllocateIP(netname string) (net.IP, error) {
 
 func RegisterIP(netname string, VMName string, ipaddr net.IP) error {
 	//check if the ip valid
-	if err := Init(); err != nil {
-		return err
-	}
 	nw, ok := networks[netname]
 	if !ok {
 		return fmt.Errorf("The network is not exists")
@@ -268,18 +276,19 @@ func RegisterIP(netname string, VMName string, ipaddr net.IP) error {
 	if !nw.Subnet.Contains(ipaddr) {
 		return fmt.Errorf("The IP is invalid")
 	}
+
+	libnet, err := libconn.LookupNetworkByName(netname)
+	if err != nil {
+		return err
+	}
 	libhost := libvirtxml.NetworkDHCPHost{
 		XMLName: xml.Name{},
-		ID:      VMName,
+		ID:      util.GetBytesSha256([]byte(VMName)),
 		MAC:     "",
 		Name:    VMName,
 		IP:      ipaddr.String(),
 	}
 	hostStr, err := libhost.Marshal()
-	if err != nil {
-		return err
-	}
-	libnet, err := libconn.LookupNetworkByName(netname)
 	if err != nil {
 		return err
 	}
@@ -292,9 +301,6 @@ func RegisterIP(netname string, VMName string, ipaddr net.IP) error {
 
 func ReleaseIP(netname string, VMName string, ipaddr net.IP) error {
 	//check if the ip valid
-	if err := Init(); err != nil {
-		return err
-	}
 	nw, ok := networks[netname]
 	if !ok {
 		return fmt.Errorf("The network is not exists")
@@ -304,7 +310,7 @@ func ReleaseIP(netname string, VMName string, ipaddr net.IP) error {
 	}
 	libhost := libvirtxml.NetworkDHCPHost{
 		XMLName: xml.Name{},
-		ID:      VMName,
+		ID:      util.GetBytesSha256([]byte(VMName)),
 		MAC:     "",
 		Name:    VMName,
 		IP:      ipaddr.String(),

@@ -26,7 +26,7 @@ type BridgeNetworkDriver struct {
 
 type IPAM struct {
 	SubnetAllocatorPath string
-	Subnets             *map[string]string
+	Subnets             map[string]string
 }
 
 type NetworkConf struct {

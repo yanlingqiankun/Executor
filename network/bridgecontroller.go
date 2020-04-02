@@ -33,7 +33,7 @@ func (nw *Network) createBridge() error {
 func (d *BridgeNetworkDriver) initBridge(IpRange *net.IPNet) error {
 	// try to get bridge by name, if it already exists then just exit
 	bridgeName := d.BridgeName
-	if err := createBridgeInterface(bridgeName, d.IP.String(), d.Mask.String()); err != nil {
+	if err := createBridgeInterface(bridgeName, d.IP.String(), net.IP(d.Mask).String()); err != nil {
 		return fmt.Errorf("Error add bridge： %s, Error: %v", bridgeName, err)
 	}
 
@@ -75,7 +75,8 @@ func deleteBridge(n *Network) error {
 	if err != nil {
 		return fmt.Errorf("Getting link with name %s failed: %v", bridgeName, err)
 	}
-	return l.Undefine()
+	defer l.Undefine()
+	return l.Destroy()
 	//// delete the link
 	//if err := netlink.LinkDel(l); err != nil {
 	//	return fmt.Errorf("Failed to remove bridge interface %s delete: %v", bridgeName, err)
@@ -132,9 +133,14 @@ func createBridgeInterface(bridgeName, ip, mask string) error {
 	if err != nil {
 		return err
 	}
-	_, err = libconn.NetworkCreateXML(netStr)
-
-	return err
+	libnet, err := libconn.NetworkDefineXML(netStr)
+	if err != nil {
+		return err
+	}
+	if err := libnet.Create(); err != nil {
+		return err
+	}
+	return libnet.SetAutostart(true)
 }
 //
 //func setInterfaceUP(interfaceName string) error {
