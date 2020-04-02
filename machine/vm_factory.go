@@ -13,9 +13,49 @@ import (
 
 
 func CreateVM(imageID string) Factory {
+	vmType := conf.GetString("VMType")
 	VM := &BaseVM{
 		ImageID:       imageID,
-		VMConfig:      &libvirtxml.Domain{},
+		VMConfig:      &libvirtxml.Domain{
+			XMLName:              xml.Name{},
+			Type:                 vmType,
+			Memory:               &libvirtxml.DomainMemory{
+				Value:    0,
+				Unit:     "1024000",
+				DumpCore: "",
+			},
+			CurrentMemory:        nil,
+			BlockIOTune:          nil,
+			MemoryTune:           nil,
+			MemoryBacking:        nil,
+			VCPU:                 &libvirtxml.DomainVCPU{
+				Placement: "",
+				CPUSet:    "",
+				Current:   "",
+				Value:     1,
+			},
+
+			OS:                  &libvirtxml.DomainOS{
+				Type:        &libvirtxml.DomainOSType{
+					Arch:    "x86_64",
+					Machine: "pc",
+					Type:    "",
+				},
+			},
+			Devices:  &libvirtxml.DomainDeviceList{
+				Graphics:     append(make([]libvirtxml.DomainGraphic, 0), libvirtxml.DomainGraphic{
+					XMLName:     xml.Name{},
+					SDL:         nil,
+					VNC:         &libvirtxml.DomainGraphicVNC{
+						Port:          -1,
+						AutoPort:      "yes",
+						WebSocket:     0,
+						Keymap:        "en-us",
+						Listen:        "0.0.0.0",
+					},
+				}),
+			},
+		},
 		RuntimeConfig: &RuntimeConfig{},
 	}
 	VM.SetImage(imageID)
@@ -71,7 +111,6 @@ func (VM *BaseVM) SetImage(imageID string) {
 			Index:         0,
 			Encryption:    nil,
 			Reservations:  nil,
-			Slices:        nil,
 		},
 		BackingStore: nil,
 		Geometry:     nil,
