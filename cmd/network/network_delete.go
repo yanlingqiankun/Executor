@@ -20,7 +20,7 @@ func GetNetworkDeleteCmd() *cobra.Command {
 		Run:   networkDeleteHandle,
 	}
 
-	deleteCmd.Flags().BoolVarP(&force, "all", "a", false, "delete network force")
+	deleteCmd.Flags().BoolVarP(&force, "all", "f", false, "delete network force")
 	return deleteCmd
 }
 

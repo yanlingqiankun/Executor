@@ -217,7 +217,12 @@ func DeleteNetwork(networkName string, force bool) error {
 		return err
 	}
 
-	return nw.remove(defaultNetworkPath)
+	err := nw.remove(defaultNetworkPath)
+	if err != nil {
+		return err
+	}
+	delete(networks, nw.Name)
+	return nil
 }
 
 func InspectNetwork(networkName string) (string, error) {

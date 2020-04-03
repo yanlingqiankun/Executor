@@ -34,7 +34,7 @@ func (s server) DeleteNetwork(ctx context.Context, req *pb.NetworkDeleteReq) (*p
 			Error:                &pb.Error{Code : 1,Message:"failed to create network with error :" + err.Error()},
 		}, err
 	} else {
-		return nil, nil
+		return &pb.NetworkDeleteResp{Error:&pb.Error{Code:0}}, nil
 	}
 }
 
@@ -55,7 +55,7 @@ func (s server) InspectNetwork(ctx context.Context, req *pb.NetworkInspectReq) (
 		}, err
 	} else {
 		return &pb.NetworkInspectResp{
-			Error:                &pb.Error{},
+			Error:                &pb.Error{Code:0},
 			NetInfo:              str,
 		}, nil
 	}
