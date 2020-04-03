@@ -8,10 +8,12 @@ import (
 
 func (s server) CreateNetwork(ctx context.Context, req *pb.NetworkCreateReq) (*pb.NetworkCreateResp, error) {
 	if err := createNetwork(req.Name, req.Subnet, req.Gateway); err != nil {
+		logger.WithError(err).Error("failed to create network")
 		return &pb.NetworkCreateResp{
 			Id:                   "",
 			Error:                &pb.Error{
-				Message:              "failed to create network with error :" + err.Error(),
+				Code: 				1,
+				Message:          "failed to create network with error :" + err.Error(),
 			},
 		}, err
 	}
@@ -23,4 +25,20 @@ func (s server) CreateNetwork(ctx context.Context, req *pb.NetworkCreateReq) (*p
 
 func createNetwork (name, subnet, gateway string) error {
 	return network.CreateNetwork(name, subnet, gateway)
+}
+
+
+func (s server) DeleteNetwork(ctx context.Context, req *pb.NetworkDeleteReq) (*pb.NetworkDeleteResp, error) {
+	if err := deleteNetwork(req.Name, req.Force); err != nil {
+		logger.WithError(err).Error("failed to delete network")
+		return &pb.NetworkDeleteResp{
+			Error:                &pb.Error{Code : 1,Message:"failed to create network with error :" + err.Error()},
+		}, err
+	} else {
+		return nil, nil
+	}
+}
+
+func deleteNetwork(name string, force bool) error {
+	return network.DeleteNetwork(name, force)
 }
