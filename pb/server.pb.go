@@ -29,14 +29,15 @@ func init() {
 }
 
 var fileDescriptor_98d161fbd54d4312 = []byte{
-	// 110 bytes of a gzipped FileDescriptorProto
+	// 127 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x2f, 0x48, 0xd2, 0x2f,
 	0x4e, 0x2d, 0x2a, 0x4b, 0x2d, 0xd2, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x2a, 0x48, 0x92,
-	0x12, 0x28, 0x48, 0xd2, 0xcf, 0x4b, 0x2d, 0x29, 0xcf, 0x2f, 0xca, 0x86, 0x88, 0x1a, 0x79, 0x71,
-	0x71, 0xb8, 0x56, 0xa4, 0x26, 0x97, 0x96, 0xe4, 0x17, 0x09, 0xd9, 0x71, 0xf1, 0x3a, 0x17, 0xa5,
-	0x26, 0x96, 0xa4, 0xfa, 0x41, 0x94, 0x08, 0x89, 0xe8, 0x15, 0x24, 0xe9, 0x41, 0x39, 0x10, 0x99,
-	0xa0, 0xd4, 0x42, 0x29, 0x51, 0x2c, 0xa2, 0xc5, 0x05, 0x4a, 0x0c, 0x49, 0x6c, 0x60, 0x23, 0x8d,
-	0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0xde, 0x0e, 0xae, 0x31, 0x7b, 0x00, 0x00, 0x00,
+	0x12, 0x28, 0x48, 0xd2, 0xcf, 0x4b, 0x2d, 0x29, 0xcf, 0x2f, 0xca, 0x86, 0x88, 0x1a, 0x75, 0x31,
+	0x72, 0x71, 0xb8, 0x56, 0xa4, 0x26, 0x97, 0x96, 0xe4, 0x17, 0x09, 0xd9, 0x71, 0xf1, 0x3a, 0x17,
+	0xa5, 0x26, 0x96, 0xa4, 0xfa, 0x41, 0xd4, 0x08, 0x89, 0xe8, 0x15, 0x24, 0xe9, 0x41, 0x39, 0x10,
+	0x99, 0xa0, 0xd4, 0x42, 0x29, 0x51, 0x2c, 0xa2, 0xc5, 0x05, 0x4a, 0x0c, 0x20, 0xfd, 0x2e, 0xa9,
+	0x39, 0xa9, 0xd8, 0xf5, 0x43, 0x64, 0xd0, 0xf5, 0xc3, 0x44, 0x41, 0xfa, 0x93, 0xd8, 0xc0, 0x6e,
+	0x32, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0x5d, 0x20, 0x22, 0x47, 0xbc, 0x00, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -53,6 +54,7 @@ const _ = grpc.SupportPackageIsVersion6
 type ExecutorClient interface {
 	// notwork
 	CreateNetwork(ctx context.Context, in *NetworkCreateReq, opts ...grpc.CallOption) (*NetworkCreateResp, error)
+	DeleteNetwork(ctx context.Context, in *NetworkDeleteReq, opts ...grpc.CallOption) (*NetworkDeleteResp, error)
 }
 
 type executorClient struct {
@@ -72,10 +74,20 @@ func (c *executorClient) CreateNetwork(ctx context.Context, in *NetworkCreateReq
 	return out, nil
 }
 
+func (c *executorClient) DeleteNetwork(ctx context.Context, in *NetworkDeleteReq, opts ...grpc.CallOption) (*NetworkDeleteResp, error) {
+	out := new(NetworkDeleteResp)
+	err := c.cc.Invoke(ctx, "/pb.Executor/DeleteNetwork", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ExecutorServer is the server API for Executor service.
 type ExecutorServer interface {
 	// notwork
 	CreateNetwork(context.Context, *NetworkCreateReq) (*NetworkCreateResp, error)
+	DeleteNetwork(context.Context, *NetworkDeleteReq) (*NetworkDeleteResp, error)
 }
 
 // UnimplementedExecutorServer can be embedded to have forward compatible implementations.
@@ -84,6 +96,9 @@ type UnimplementedExecutorServer struct {
 
 func (*UnimplementedExecutorServer) CreateNetwork(ctx context.Context, req *NetworkCreateReq) (*NetworkCreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateNetwork not implemented")
+}
+func (*UnimplementedExecutorServer) DeleteNetwork(ctx context.Context, req *NetworkDeleteReq) (*NetworkDeleteResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteNetwork not implemented")
 }
 
 func RegisterExecutorServer(s *grpc.Server, srv ExecutorServer) {
@@ -108,6 +123,24 @@ func _Executor_CreateNetwork_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Executor_DeleteNetwork_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NetworkDeleteReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExecutorServer).DeleteNetwork(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.Executor/DeleteNetwork",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExecutorServer).DeleteNetwork(ctx, req.(*NetworkDeleteReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Executor_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "pb.Executor",
 	HandlerType: (*ExecutorServer)(nil),
@@ -115,6 +148,10 @@ var _Executor_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateNetwork",
 			Handler:    _Executor_CreateNetwork_Handler,
+		},
+		{
+			MethodName: "DeleteNetwork",
+			Handler:    _Executor_DeleteNetwork_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
