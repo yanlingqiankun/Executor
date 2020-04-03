@@ -27,7 +27,6 @@ func createNetwork (name, subnet, gateway string) error {
 	return network.CreateNetwork(name, subnet, gateway)
 }
 
-
 func (s server) DeleteNetwork(ctx context.Context, req *pb.NetworkDeleteReq) (*pb.NetworkDeleteResp, error) {
 	if err := deleteNetwork(req.Name, req.Force); err != nil {
 		logger.WithError(err).Error("failed to delete network")
@@ -41,4 +40,27 @@ func (s server) DeleteNetwork(ctx context.Context, req *pb.NetworkDeleteReq) (*p
 
 func deleteNetwork(name string, force bool) error {
 	return network.DeleteNetwork(name, force)
+}
+
+func (s server) InspectNetwork(ctx context.Context, req *pb.NetworkInspectReq) (*pb.NetworkInspectResp, error) {
+	str, err := inspectNetwork(req.Name)
+	if err != nil {
+		logger.WithError(err).Error("failed to inspect network")
+		return &pb.NetworkInspectResp{
+			Error:                &pb.Error{
+				Code:                 1,
+				Message:              err.Error(),
+			},
+			NetInfo:              "",
+		}, err
+	} else {
+		return &pb.NetworkInspectResp{
+			Error:                &pb.Error{},
+			NetInfo:              str,
+		}, nil
+	}
+}
+
+func inspectNetwork (name string) (string, error) {
+	return network.InspectNetwork(name)
 }

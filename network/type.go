@@ -1,6 +1,7 @@
 package network
 
 import (
+	libvirtxml "github.com/libvirt/libvirt-go-xml"
 	"net"
 	"time"
 )
@@ -39,4 +40,11 @@ type NetworkInfo struct {
 	Driver     string
 	CreateTime string
 	Config     NetworkConf
+}
+
+type inspectInfo struct {
+	Name                string              `json:"name,omitempty"`
+	Bridge              *libvirtxml.NetworkBridge      `json:"bridge"`
+	MAC                 *libvirtxml.NetworkMAC         `json:"mac"`
+	IPs                 []libvirtxml.NetworkIP         `json:"ip"`
 }

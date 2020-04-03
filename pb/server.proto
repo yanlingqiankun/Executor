@@ -8,4 +8,5 @@ service Executor {
     // notwork
     rpc CreateNetwork(NetworkCreateReq) returns (NetworkCreateResp) {}
     rpc DeleteNetwork(NetworkDeleteReq) returns (NetworkDeleteResp) {}
+    rpc InspectNetwork(NetworkInspectReq) returns (NetworkInspectResp) {}
 }

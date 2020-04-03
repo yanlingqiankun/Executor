@@ -27,3 +27,12 @@ message NetworkDeleteReq {
 message NetworkDeleteResp {
     Error error = 1;
 }
+
+message NetworkInspectReq {
+    string name = 1;
+}
+
+message NetworkInspectResp {
+    Error error = 1;
+    string net_info = 2;
+}

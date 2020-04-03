@@ -65,22 +65,21 @@ func (d *BridgeNetworkDriver) initBridge(IpRange *net.IPNet) error {
 // deleteBridge deletes the bridge
 func deleteBridge(n *Network) error {
 	bridgeName := n.Driver
-	// get the link
-	//l, err := netlink.LinkByName(bridgeName)
-	//if err != nil {
-	//	return fmt.Errorf("Getting link with name %s failed: %v", bridgeName, err)
-	//}
-	//
 	l, err := libconn.LookupNetworkByName(bridgeName)
 	if err != nil {
 		return fmt.Errorf("Getting link with name %s failed: %v", bridgeName, err)
 	}
-	defer l.Undefine()
-	return l.Destroy()
-	//// delete the link
-	//if err := netlink.LinkDel(l); err != nil {
-	//	return fmt.Errorf("Failed to remove bridge interface %s delete: %v", bridgeName, err)
-	//}
+	if ok, _ := l.IsActive(); ok {
+		if err := l.Destroy(); err != nil {
+			return err
+		}
+	}
+	if ok, _ := l.IsPersistent(); ok {
+		if err := l.Undefine(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func createBridgeInterface(bridgeName, ip, mask string) error {
@@ -89,14 +88,6 @@ func createBridgeInterface(bridgeName, ip, mask string) error {
 		return err
 	}
 
-	// create *netlink.Bridge object
-	//la := netlink.NewLinkAttrs()
-	//la.Name = bridgeName
-	//
-	//br := &netlink.Bridge{la, nil, nil, nil}
-	//if err := netlink.LinkAdd(br); err != nil {
-	//	return fmt.Errorf("Bridge creation failed for bridge %s: %v", bridgeName, err)
-	//}
 	netXML := &libvirtxml.Network{
 		XMLName:             xml.Name{},
 		IPv6:                "",

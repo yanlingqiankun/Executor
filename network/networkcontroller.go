@@ -220,26 +220,36 @@ func DeleteNetwork(networkName string, force bool) error {
 	return nw.remove(defaultNetworkPath)
 }
 
-func inspectNetwork(networkName string) error {
-	nw, ok := networks[networkName]
+func InspectNetwork(networkName string) (string, error) {
+	_, ok := networks[networkName]
 	if !ok {
-		return fmt.Errorf("No Such Network: %s", networkName)
+		return "", fmt.Errorf("No Such Network: %s", networkName)
 	}
-	networkinfo := NetworkInfo{
-		Name:       nw.Name,
-		Driver:     nw.Driver,
-		CreateTime: nw.CreateTime.Format(TIME_LAYOUT),
-		Config: NetworkConf{
-			Gateway: nw.GateWay.String(),
-			Subnet:  nw.Subnet.String(),
-		},
-	}
-	output, err := json.MarshalIndent(networkinfo, " ", "\t")
+
+	libnet, err := libconn.LookupNetworkByName(networkName)
 	if err != nil {
-		return fmt.Errorf("failed to inspect network with error: %v", err)
+		return "", err
 	}
-	fmt.Println(string(output))
-	return nil
+	defer libnet.Free()
+	xmlStr, err := libnet.GetXMLDesc(libvirt.NETWORK_XML_INACTIVE)
+	if err != nil {
+		return "", err
+	}
+	var structInfo = libvirtxml.Network{}
+	if err := xml.Unmarshal([]byte(xmlStr), &structInfo); err != nil {
+		return "", err
+	}
+	var inspectStruct = inspectInfo{
+		Name:   structInfo.Name,
+		Bridge: structInfo.Bridge,
+		MAC:    structInfo.MAC,
+		IPs:    structInfo.IPs,
+	}
+	output, err := json.MarshalIndent(inspectStruct, " ", "\t")
+	if err != nil {
+		return "", fmt.Errorf("failed to inspect network with error: %v", err)
+	}
+	return string(output), nil
 }
 
 //返回一个network的信息，如果没有则返回nil
@@ -323,6 +333,7 @@ func ReleaseIP(netname string, VMName string, ipaddr net.IP) error {
 	if err != nil {
 		return err
 	}
+	defer libnet.Free()
 	err = libnet.Update(libvirt.NETWORK_UPDATE_COMMAND_DELETE,libvirt.NETWORK_SECTION_IP_DHCP_HOST, -1,hostStr,libvirt.NETWORK_UPDATE_AFFECT_LIVE | libvirt.NETWORK_UPDATE_AFFECT_CONFIG)
 	if err != nil {
 		return err
