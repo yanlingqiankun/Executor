@@ -15,6 +15,15 @@ message NetworkCreateReq {
 }
 
 message NetworkCreateResp {
-
+    string id = 1;
     Error  error = 2;
+}
+
+message NetworkDeleteReq {
+    string name = 1;
+    bool force = 2;
+}
+
+message NetworkDeleteResp {
+    Error error = 1;
 }

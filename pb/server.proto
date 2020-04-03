@@ -7,4 +7,5 @@ import "pb/network.proto";
 service Executor {
     // notwork
     rpc CreateNetwork(NetworkCreateReq) returns (NetworkCreateResp) {}
+    rpc DeleteNetwork(NetworkDeleteReq) returns (NetworkDeleteResp) {}
 }
