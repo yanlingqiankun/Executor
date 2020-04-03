@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package pb;
+
+import "pb/network.proto";
+
+service Executor {
+    // notwork
+    rpc CreateNetwork(NetworkCreateReq) returns (NetworkCreateResp) {}
+}

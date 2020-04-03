@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package pb;
+
+import "pb/common.proto";
+
+message NetworkName {
+    string id = 1;
+}
+
+message NetworkCreateReq {
+    string name = 1;
+    string subnet = 2;
+    string gateway = 3;
+}
+
+message NetworkCreateResp {
+
+    Error  error = 2;
+}
