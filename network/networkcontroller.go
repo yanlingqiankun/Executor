@@ -139,7 +139,7 @@ func Init() error {
 	return nil
 }
 
-func CreateNetwork(subnet, name, gateway string) error {
+func CreateNetwork(name, subnet, gateway string) error {
 	if _, ok := networks[name]; ok {
 		return fmt.Errorf("The network exists")
 	}
