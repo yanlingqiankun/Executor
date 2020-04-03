@@ -3,5 +3,6 @@ syntax = "proto3";
 package pb;
 
 message Error {
+    uint32 code =1;
     string message = 2;
 }
