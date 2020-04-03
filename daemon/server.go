@@ -1,7 +1,6 @@
 package daemon
 
 import (
-	"context"
 	"github.com/yanlingqiankun/Executor/conf"
 	"github.com/yanlingqiankun/Executor/pb"
 	"google.golang.org/grpc"
@@ -19,10 +18,6 @@ const apiPattern = "(tcp|unix)://(.+)"
 var rpcServer = grpc.NewServer()
 
 type server struct{}
-
-func (s server) CreateNetwork(context.Context, *pb.NetworkCreateReq) (*pb.NetworkCreateResp, error) {
-	panic("implement me")
-}
 
 func StartServer() {
 	api := conf.GetString("APIPath")
@@ -52,7 +47,7 @@ func StartServer() {
 	}
 
 	if r[1] == "unix" {
-		if group, err := user.LookupGroup("islands"); err == nil {
+		if group, err := user.LookupGroup("executor"); err == nil {
 			gid, _ := strconv.Atoi(group.Gid)
 			syscall.Chown(r[2], syscall.Getuid(), gid)
 			syscall.Chmod(r[2], 0770)
