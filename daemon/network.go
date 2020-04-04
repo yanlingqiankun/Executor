@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"context"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/yanlingqiankun/Executor/network"
 	"github.com/yanlingqiankun/Executor/pb"
 )
@@ -63,4 +64,15 @@ func (s server) InspectNetwork(ctx context.Context, req *pb.NetworkInspectReq) (
 
 func inspectNetwork (name string) (string, error) {
 	return network.InspectNetwork(name)
+}
+
+func (s server) ListNetwork(context.Context, *empty.Empty) (*pb.NetworkListResp, error) {
+	return &pb.NetworkListResp{
+		Networks:             ListNetwork(),
+		Error:                &pb.Error{Code:0},
+	}, nil
+}
+
+func ListNetwork () []*pb.NetworkInfo {
+	return network.ListNetwork()
 }

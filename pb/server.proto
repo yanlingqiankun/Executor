@@ -3,10 +3,12 @@ syntax = "proto3";
 package pb;
 
 import "pb/network.proto";
+import "google/protobuf/empty.proto";
 
 service Executor {
     // notwork
     rpc CreateNetwork(NetworkCreateReq) returns (NetworkCreateResp) {}
     rpc DeleteNetwork(NetworkDeleteReq) returns (NetworkDeleteResp) {}
     rpc InspectNetwork(NetworkInspectReq) returns (NetworkInspectResp) {}
+    rpc ListNetwork(google.protobuf.Empty) returns (NetworkListResp) {}
 }

@@ -36,3 +36,15 @@ message NetworkInspectResp {
     Error error = 1;
     string net_info = 2;
 }
+
+message NetworkInfo {
+    string name = 1;
+    string create_time = 2;
+    string gateway = 3;
+    string subnet = 4;
+}
+
+message NetworkListResp {
+    repeated NetworkInfo networks = 1;
+    Error error = 2;
+}

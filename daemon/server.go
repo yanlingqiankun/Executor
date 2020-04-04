@@ -19,7 +19,6 @@ var rpcServer = grpc.NewServer()
 
 type server struct{}
 
-
 func StartServer() {
 	api := conf.GetString("APIPath")
 	reg := regexp.MustCompile(apiPattern)

@@ -9,12 +9,12 @@ import (
 	"github.com/vishvananda/netlink"
 	"github.com/yanlingqiankun/Executor/conf"
 	"github.com/yanlingqiankun/Executor/logging"
+	"github.com/yanlingqiankun/Executor/pb"
 	"github.com/yanlingqiankun/Executor/util"
 	"net"
 	"os"
 	"path"
 	"path/filepath"
-	"text/tabwriter"
 	"time"
 )
 
@@ -182,21 +182,17 @@ func CreateNetwork(name, subnet, gateway string) error {
 	return nw.createBridge()
 }
 
-func listNetwork() {
-	w := tabwriter.NewWriter(os.Stdout, 12, 4, 3, ' ', 0)
-	fmt.Fprint(w, "NAME\tSubnet\tBridge\tGateway\n")
+func ListNetwork() []*pb.NetworkInfo {
+	result := make([]*pb.NetworkInfo, 0)
 	for _, nw := range networks {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
-			nw.Name,
-			nw.Subnet.String(),
-			nw.Driver,
-			nw.GateWay.String(),
-		)
+		result = append(result, &pb.NetworkInfo{
+			Name:                 nw.Name,
+			CreateTime:           nw.CreateTime.Format(TIME_LAYOUT),
+			Gateway:              nw.GateWay.String(),
+			Subnet:               nw.Subnet.String(),
+		})
 	}
-	if err := w.Flush(); err != nil {
-		fmt.Println("Flush error %v", err)
-		return
-	}
+	return result
 }
 
 func DeleteNetwork(networkName string, force bool) error {
