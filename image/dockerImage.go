@@ -91,7 +91,7 @@ func GetImageFromDocker(name string) (string, error) {
 	} else {
 		db[id] = &ImageEntry{
 			Name:          name,
-			ID:            imageInfo.ID,
+			ID:            id,
 			CreateTime:    time.Now(),
 			Type:          "docker",
 			IsDockerImage: true,

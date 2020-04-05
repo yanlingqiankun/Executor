@@ -13,7 +13,7 @@ func GetImageCmd() *cobra.Command {
 		Run:   func(cmd *cobra.Command, args []string) { _ = cmd.Help() },
 	}
 	imageCmd.AddCommand(
-		//GetImageListCmd(),
+		GetImageListCmd(),
 		GetImageImportCmd(),
 		//GetImageRemoveCmd(),
 		//GetImageExportCmd(),
