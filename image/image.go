@@ -70,12 +70,16 @@ func (image *ImageEntry) GetType() (isDocker bool, imageType string) {
 }
 
 func (image *ImageEntry) Remove() error {
-	if _, ok := db[image.Name]; !ok {
+	if i, ok := db[image.Name]; !ok {
 		return fmt.Errorf("can not find the image")
+	} else {
+		if i.Counter != 0 {
+			return fmt.Errorf("the image was by use, please remove machine firstly")
+		}
+		delete(db, image.Name)
+		logger.Info("The image %s has been removed", image.Name)
+		return nil
 	}
-	delete(db, image.Name)
-	logger.Info("The image %s has been removed", image.Name)
-	return nil
 }
 
 func (image *ImageEntry) Rename(name string) error {
@@ -89,6 +93,31 @@ func (image *ImageEntry) Rename(name string) error {
 	return nil
 }
 
+//被容器使用之前要先进行注册
+func (db imageDB) register(id string) error {
+	if image, ok := db[id]; ok {
+		image.Counter ++
+		db.save()
+		logger.Debug(image.ID, " registered success")
+		return nil
+	}
+	return fmt.Errorf("The image not exist")
+}
+
+//当容器被销毁要取消对其注册
+func (db imageDB) unRegister(id string) error {
+	if image, ok := db[id]; ok {
+		if image.Counter > 0 {
+			image.Counter --
+			db.save()
+		}
+		logger.Debug(image.ID, " unRegister success")
+		return nil
+	}
+	return fmt.Errorf("The image not exist")
+}
+
+
 func GetImageType(imageID string) string {
 	if image, ok := db[imageID]; ok {
 		return image.Type
@@ -96,7 +125,7 @@ func GetImageType(imageID string) string {
 	return ""
 }
 
-// method to get imageId of a name or id
+// method to get imageId of a name or id return id
 func CheckNameOrID (args string) string {
 	if image, ok := db[args]; ok {
 		return image.ID

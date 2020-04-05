@@ -3,6 +3,7 @@ package image
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/yanlingqiankun/Executor/conf"
 	"io"
@@ -43,10 +44,11 @@ import (
 //	return nil
 //}
 
-func PullDockerImage(ctx context.Context, name string) error {
-	if _, ok := db[name]; ok {
+func PullDockerImage(ctx context.Context, name string) (string, error) {
+	id := CheckNameOrID(name)
+	if id != "" {
 		logger.Debug("The docker image has been in repository : ", name)
-		return nil
+		return id, nil
 	}
 	buf := bytes.Buffer{}
 	storeNode := conf.GetString("StoreNode")
@@ -54,27 +56,49 @@ func PullDockerImage(ctx context.Context, name string) error {
 	refStr := storeNode + ":" + registryPort + "/" + name
 	resp, err := cli.ImagePull(ctx, refStr, types.ImagePullOptions{All: false})
 	if err != nil {
-		return  err
+		return  "", err
 	}
 	defer resp.Close()
 	io.Copy(&buf, resp)
-	logger.Infoln("docker pull infomation : \n", buf.String())
+	logger.Infoln("docker pull information : \n", buf.String())
 	if err := cli.ImageTag(ctx, refStr, name); err != nil {
-		return err
+		return "", err
 	}
 	imageId, err := getDockerImageID(name)
 	if err != nil {
-		return err
+		return "", err
 	}
 	db[imageId] = &ImageEntry{
 		Name:          name,
 		ID:            imageId,
 		CreateTime:    time.Now(),
-		Type:          "docker_pull",
+		Type:          "docker",
 		IsDockerImage: true,
 		Counter:       0,
 	}
-	return db.save()
+	return imageId,db.save()
+}
+
+func GetImageFromDocker(name string) (string, error) {
+	imageInfo, _, err := cli.ImageInspectWithRaw(context.Background(), name)
+	if err != nil {
+		return "", err
+	}
+	id, _ := getDockerImageID(imageInfo.ID)
+	if _, ok := db[id]; ok {
+		logger.Error("The image has be in the image repo")
+		return "", fmt.Errorf("The image has be in the image repo")
+	} else {
+		db[id] = &ImageEntry{
+			Name:          name,
+			ID:            imageInfo.ID,
+			CreateTime:    time.Now(),
+			Type:          "docker",
+			IsDockerImage: true,
+			Counter:       0,
+		}
+		return id, db.save()
+	}
 }
 
 func getDockerImageID (name string) (string, error) {
