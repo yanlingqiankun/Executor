@@ -15,7 +15,6 @@ func GetNetworkCmd() *cobra.Command {
 		GetNetworkDeleteCmd(),
 		GetNetworkInspectCmd(),
 		GetNetworkListCmd(),
-		//GetNetworkRecoveryCmd(),
 	)
 	return networkCmd
 }
