@@ -63,6 +63,16 @@ func(db *imageDB) save() error {
 	return err
 }
 
+func ListImage() []*ImageEntry {
+	imageEntrys := make([]*ImageEntry, len(db))
+	var i = 0
+	for _, k := range db {
+		imageEntrys[i] = k
+		i ++
+	}
+	return imageEntrys
+}
+
 func (image *ImageEntry) GetType() (isDocker bool, imageType string) {
 	isDocker = image.IsDockerImage
 	imageType = image.Type

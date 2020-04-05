@@ -10,7 +10,7 @@ type ImageEntry struct {
 	CreateTime    time.Time         `json:"create-time"`
 	Type          string            `json:"type"`		// docker_save, docker_raw, kvm_ios, kvm_qcow2
 	IsDockerImage bool              `json:"is_docker_image"`
-	Counter       int 				`json:"counter"`
+	Counter       int32 				`json:"counter"`
 }
 
 type Image interface {

@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/yanlingqiankun/Executor/conf"
 	"github.com/yanlingqiankun/Executor/pb"
 	"google.golang.org/grpc"

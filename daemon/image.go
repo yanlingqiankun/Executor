@@ -3,9 +3,12 @@ package daemon
 import (
 	"context"
 	"fmt"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/yanlingqiankun/Executor/image"
 	"github.com/yanlingqiankun/Executor/pb"
 )
+
+const TIME_LAYOUT = "2006-01-02 15:04:05.999999999 -0700 MST"
 
 func (s server) ImportImage(ctx context.Context, req *pb.ImportImageReq) (*pb.ImportImageResp, error) {
 	return importImage(req)
@@ -48,4 +51,26 @@ func importImage (req *pb.ImportImageReq) (*pb.ImportImageResp, error) {
 			},
 		}, fmt.Errorf("wrong type of image : %s", req.Type)
 	}
+}
+
+func (s server) ListImage(context.Context, *empty.Empty) (*pb.ListImageResp, error) {
+	return listImage()
+}
+
+func listImage() (*pb.ListImageResp, error) {
+	var result = &pb.ListImageResp{
+		Images: nil,
+		Err:    nil,
+	}
+	images := image.ListImage()
+	for _, key := range images {
+		result.Images = append(result.Images, &pb.Image{
+			Id:                   key.ID,
+			CreateTime:           key.CreateTime.Format(TIME_LAYOUT),
+			Name:                 key.Name,
+			Type:                 key.Type,
+			Machines:             key.Counter,
+		})
+	}
+	return result, nil
 }
