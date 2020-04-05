@@ -15,4 +15,5 @@ service Executor {
 
     // image
     rpc ImportImage(ImportImageReq) returns (ImportImageResp) {}
+    rpc ListImage(google.protobuf.Empty) returns (ListImageResp) {}
 }

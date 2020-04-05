@@ -14,3 +14,18 @@ message ImportImageResp {
     string id = 1;
     Error err = 2;
 }
+
+
+message Image {
+    string id = 1;
+    string create_time = 2;
+    string name = 3;
+    string type = 4;
+    int32  machines = 5;
+}
+
+message ListImageResp {
+    repeated Image images = 1;
+    Error err = 2;
+}
+
