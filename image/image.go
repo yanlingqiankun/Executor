@@ -124,7 +124,17 @@ func (image *ImageEntry) Rename(name string) error {
 	return nil
 }
 
-//被容器使用之前要先进行注册
+
+func (image *ImageEntry) Register() {
+	db.register(image.ID)
+}
+
+func (image *ImageEntry) UnRegister() {
+	db.unRegister(image.ID)
+}
+
+
+//被machine使用之前要先进行注册
 func (db imageDB) register(id string) error {
 	if image, ok := db[id]; ok {
 		image.Counter ++

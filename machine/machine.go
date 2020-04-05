@@ -42,6 +42,15 @@ func GetMachine(id string) (Machine, error) {
 	return machine.machine, nil
 }
 
+func AddMachine(f Factory) (string, error) {
+	baseEntry, err := f.GetBase()
+	if err != nil {
+		return "", err
+	}
+	db.Store(baseEntry.ID, baseEntry)
+	return baseEntry.ID, nil
+}
+
 func (m *Base) Start() error {
 	if m.IsDocker {
 		return StartContainer(m.ID)

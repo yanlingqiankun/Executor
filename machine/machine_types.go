@@ -28,9 +28,10 @@ type Factory interface {
 	SetUser(string)                // User
 	SetEnv([]string)               // Env
 	SetTTYSize(width, height uint16)
-	GetBase() (*Base, error)				   // get machine entry
+	GetBase() (*Base, error)	  // get machine entry
 	SetHosts([]string)            // 格式：{"hostname:192.168.0.2"}
 	SetExposedPorts(info []proxy.ProxyInfo)
+	Create() error
 }
 
 type Base struct {

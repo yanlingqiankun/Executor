@@ -18,3 +18,5 @@ type BaseVM struct {
 	VMConfig      *libvirtxml.Domain
 	RuntimeConfig *RuntimeConfig
 }
+
+

@@ -43,11 +43,21 @@ func CreateContainer(imageID string) Factory {
 
 
 // Factory interface
+func (container *BaseContainer) Create() error {
+	body, err := cli.ContainerCreate(context.Background(), container.ContainerConfig, container.HostConfig, nil, container.Name)
+	if err != nil {
+		return err
+	}
+	container.ContainerId = body.ID
+	logger.Debugf("The container %s created successfully", container.ContainerId)
+	return nil
+}
+
 func (container *BaseContainer) SetName(name string) error {
 	if name == "" {
 		return nil
 	}
-	container.ContainerConfig.Domainname = name
+	container.Name = name
 	return nil
 }
 
@@ -134,15 +144,11 @@ func (container *BaseContainer) SetTTYSize(width, height uint16) {
 }
 
 func (container *BaseContainer) GetBase() (*Base, error) {
-	data, err := cli.ContainerInspect(context.Background(), container.ContainerConfig.Domainname)
-	if err != nil {
-		return nil, err
-	}
 	return &Base{
 		IsDocker:       true,
 		ImageID:        container.ImageID,
-		ID:             data.ID,
-		Name:           data.Name,
+		ID:             container.ContainerId,
+		Name:           container.Name,
 		RuntimeSetting: container.RuntimeConfig,
 	}, nil
 }

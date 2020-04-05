@@ -62,6 +62,19 @@ func CreateVM(imageID string) Factory {
 	return VM
 }
 // Factory interface
+func (VM *BaseVM) Create() error {
+	xmlStr, err := VM.VMConfig.Marshal()
+	if err != nil {
+		return err
+	}
+	_, err = libconn.DomainDefineXML(xmlStr)
+	if err != nil {
+		return err
+	}
+	logger.Debugf("The VM %s created successfully", VM.VMConfig.ID)
+	return nil
+}
+
 func (VM *BaseVM) SetName(name string) error {
 	if name == "" {
 		return nil

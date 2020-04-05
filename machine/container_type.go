@@ -17,7 +17,11 @@ const (
 
 type BaseContainer struct {
 	ImageID          string
+	Name             string
+	ContainerId      string
 	RuntimeConfig    *RuntimeConfig
 	ContainerConfig  *container.Config  `json:"container_config"`
 	HostConfig 	     *container.HostConfig  `json:"host_config"`
 }
+
+

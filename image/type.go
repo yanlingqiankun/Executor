@@ -17,4 +17,6 @@ type Image interface {
 	Remove() error
 	Rename(string) error
 	GetType() (bool, string)
+	Register()
+	UnRegister()
 }

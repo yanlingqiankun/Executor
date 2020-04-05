@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package pb;
+
+import "pb/common.proto";
+
+message CreateMachineReq {
+    string image_id = 1;                // 用于构建镜像所使用的id
+    string name = 2;                    // 容器名，为空时默认使用生成id作为名字
+    repeated string env = 3;            // 环境变量
+    bool tty = 4;                       // 是否启用tty
+    repeated string cmd = 5;
+    string working_dir = 6;
+    map<string, PortBindings> exposed_ports = 7; // 端口映射
+}
+
+message PortBinding {
+    string host_ip = 1;                      // 要监听的ip
+    string host_port = 2;                    // 要监听的主机端口
+}
+
+message PortBindings {
+    repeated PortBinding port_bindings = 1;
+}
+
+message CreateMachineResp {
+    string id = 1;
+    Error err = 2;
+}
