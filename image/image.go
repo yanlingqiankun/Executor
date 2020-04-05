@@ -22,9 +22,18 @@ func init () {
 	var err error
 	db = make(map[string]*ImageEntry)
 	rootPath := conf.GetString("RootPath")
-	imagefile = filepath.Join(rootPath, "images", "imagedb.json")
+	imagePath := filepath.Join(rootPath, "images")
+	if _, err := os.Stat(imagePath); err != nil {
+		if os.IsNotExist(err) {
+			err := os.MkdirAll(imagePath, 0600)
+			if err != nil {
+				return
+			}
+		}
+	}
+	imagefile = filepath.Join(imagePath, "imagedb.json")
 	if err := load(); err != nil {
-		logger.WithError(err).Errorf("failed to load image infomation")
+		logger.WithError(err).Errorf("failed to load image information")
 	}
 	cli, err = client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
