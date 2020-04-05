@@ -15,6 +15,6 @@ type ImageEntry struct {
 
 type Image interface {
 	Remove() error
-	Rename() error
-	GetType() error
+	Rename(string) error
+	GetType() (bool, string)
 }

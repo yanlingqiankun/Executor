@@ -74,3 +74,32 @@ func listImage() (*pb.ListImageResp, error) {
 	}
 	return result, nil
 }
+
+func (s server) DeleteImage(ctx context.Context, req *pb.DeleteImageReq) (*pb.DeleteImageResp, error) {
+	err := deleteImage(req.Id)
+	if err != nil {
+		logger.WithError(err).Errorf("failed to delete image %s ", req.Id)
+		return &pb.DeleteImageResp{
+			Err:                  &pb.Error{
+				Code:                 1,
+				Message:              err.Error(),
+			},
+		}, err
+	} else {
+		logger.Debugf("image %s has been deleted", req.Id)
+		return &pb.DeleteImageResp{
+			Err:                  &pb.Error{
+				Code:                 0,
+				Message:              "",
+			},
+		}, nil
+	}
+}
+
+func deleteImage(id string) error {
+	img, err := image.OpenImage(id)
+	if err != nil {
+		return err
+	}
+	return img.Remove()
+}

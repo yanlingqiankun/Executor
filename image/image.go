@@ -15,14 +15,15 @@ type imageDB map[string]*ImageEntry
 
 var logger = logging.GetLogger("image")
 var db imageDB
-var imagefile string
+var imageFile string
+var imagePath string
 var cli *client.Client
 
 func init () {
 	var err error
 	db = make(map[string]*ImageEntry)
 	rootPath := conf.GetString("RootPath")
-	imagePath := filepath.Join(rootPath, "images")
+	imagePath = filepath.Join(rootPath, "images")
 	if _, err := os.Stat(imagePath); err != nil {
 		if os.IsNotExist(err) {
 			err := os.MkdirAll(imagePath, 0600)
@@ -31,7 +32,7 @@ func init () {
 			}
 		}
 	}
-	imagefile = filepath.Join(imagePath, "imagedb.json")
+	imageFile = filepath.Join(imagePath, "imagedb.json")
 	if err := load(); err != nil {
 		logger.WithError(err).Errorf("failed to load image information")
 	}
@@ -42,7 +43,7 @@ func init () {
 }
 
 func load () error {
-	data, err := ioutil.ReadFile(imagefile)
+	data, err := ioutil.ReadFile(imageFile)
 	if err != nil {
 		if os.IsExist(err) {
 			return err
@@ -59,7 +60,7 @@ func load () error {
 }
 
 func(db *imageDB) save() error {
-	file, err := os.OpenFile(imagefile, os.O_TRUNC | os.O_WRONLY | os.O_CREATE, 0600)
+	file, err := os.OpenFile(imageFile, os.O_TRUNC | os.O_WRONLY | os.O_CREATE, 0600)
 	defer file.Close()
 	if err != nil {
 		return err
@@ -70,6 +71,14 @@ func(db *imageDB) save() error {
 	}
 	_, err = file.Write(imageJson)
 	return err
+}
+
+func OpenImage(id string) (Image, error) {
+	if image, ok := db[id]; ok {
+		return image, nil
+	} else {
+		return nil, fmt.Errorf("can't find the image")
+	}
 }
 
 func ListImage() []*ImageEntry {
@@ -89,15 +98,18 @@ func (image *ImageEntry) GetType() (isDocker bool, imageType string) {
 }
 
 func (image *ImageEntry) Remove() error {
-	if i, ok := db[image.Name]; !ok {
+	if i, ok := db[image.ID]; !ok {
 		return fmt.Errorf("can not find the image")
 	} else {
 		if i.Counter != 0 {
-			return fmt.Errorf("the image was by use, please remove machine firstly")
+			return fmt.Errorf("the image was by use, please delete machine firstly")
 		}
-		delete(db, image.Name)
-		logger.Info("The image %s has been removed", image.Name)
-		return nil
+		if !i.IsDockerImage {
+			_ = os.Remove(filepath.Join(imagePath, image.ID))
+		}
+		delete(db, image.ID)
+		logger.Info("The image %s has been removed :", image.Name)
+		return db.save()
 	}
 }
 

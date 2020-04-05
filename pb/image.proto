@@ -29,3 +29,10 @@ message ListImageResp {
     Error err = 2;
 }
 
+message DeleteImageReq {
+    string id = 1;
+}
+
+message DeleteImageResp {
+    Error err = 1;
+}
