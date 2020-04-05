@@ -3,6 +3,7 @@ syntax = "proto3";
 package pb;
 
 import "pb/network.proto";
+import "pb/image.proto";
 import "google/protobuf/empty.proto";
 
 service Executor {
@@ -11,4 +12,7 @@ service Executor {
     rpc DeleteNetwork(NetworkDeleteReq) returns (NetworkDeleteResp) {}
     rpc InspectNetwork(NetworkInspectReq) returns (NetworkInspectResp) {}
     rpc ListNetwork(google.protobuf.Empty) returns (NetworkListResp) {}
+
+    // image
+    rpc ImportImage(ImportImageReq) returns (ImportImageResp) {}
 }

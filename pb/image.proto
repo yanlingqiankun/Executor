@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package pb;
+
+import "pb/common.proto";
+
+message ImportImageReq {
+    string path = 1;
+    string type = 2;
+    string name = 3;
+}
+
+message ImportImageResp {
+    string id = 1;
+    Error err = 2;
+}
