@@ -77,6 +77,7 @@ func GetStanderUUID() (string, error) {
 	if err != nil {
 		return "", err
 	} else {
-		return string(data), nil
+		str := string(data)
+		return str[:len(str)-1], nil
 	}
 }
