@@ -37,12 +37,21 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 	}
 
 	img.Register()
-	factory := machine.CreateVM(req.ImageId)
+	var factory machine.Factory
+	if isDocker, _ := img.GetType(); isDocker{
+		factory = machine.CreateContainer(req.ImageId)
+	} else {
+		factory = machine.CreateVM(req.ImageId)
+	}
+
+	if req.Name == ""{
+		req.Name = stringid.GenerateRandomID()[:12]
+	}
 	if err := factory.SetName(req.Name); err != nil {
 		return "", err
 	}
 	//factory.SetImage(image.MountPoint())
-
+	factory.SetImage(req.ImageId, img.GetPath())
 	factory.SetTTY(req.Tty)
 	factory.SetCmd(req.Cmd)
 	factory.SetEnv(req.Env)
@@ -153,7 +162,9 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 	//}
 	err = factory.Create()
 	if err != nil {
+		logger.WithError(err).Error("failed to create the machine")
 		return "", err
 	}
+	logger.Debugf("the machine name = %s has create successful", req.Name)
 	return machine.AddMachine(factory)
 }

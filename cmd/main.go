@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/yanlingqiankun/Executor/cmd/connection"
 	"github.com/yanlingqiankun/Executor/cmd/image"
+	"github.com/yanlingqiankun/Executor/cmd/machine"
 	"github.com/yanlingqiankun/Executor/cmd/network"
 	"os"
 )
@@ -33,6 +34,7 @@ func main() {
 	rootCmd.AddCommand(
 		network.GetNetworkCmd(),
 		image.GetImageCmd(),
+		machine.GetMachineCmd(),
 	)
 	_ = rootCmd.Execute()
 }

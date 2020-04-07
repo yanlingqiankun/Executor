@@ -6,6 +6,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/yanlingqiankun/Executor/conf"
 	"github.com/yanlingqiankun/Executor/logging"
+	"github.com/yanlingqiankun/Executor/stringid"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -124,6 +125,19 @@ func (image *ImageEntry) Rename(name string) error {
 	return nil
 }
 
+func (image *ImageEntry) GetPath() string {
+	path := filepath.Join(conf.GetString("RootPath"), "images", image.ID)
+	result := image.ID
+	if image.Type == "disk" {
+		id := stringid.GenerateRandomID()
+		err := copy(filepath.Join(path, image.ID), filepath.Join(path, id))
+		if err != nil {
+			logger.WithError(err).Error("failed to create copy of image ", image.ID)
+		}
+		result = id
+	}
+	return filepath.Join(path, result)
+}
 
 func (image *ImageEntry) Register() {
 	db.register(image.ID)

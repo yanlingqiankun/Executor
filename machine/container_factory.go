@@ -8,7 +8,15 @@ import (
 
 func CreateContainer(imageID string) Factory {
 	container := &BaseContainer{
-		ImageID:         imageID,
+		Base: &Base{
+			IsDocker:      true,
+			ImageID:       imageID,
+			ID:            "",
+			ImagePath:     "",
+			ImageType:     "",
+			Name:          "",
+			RuntimeConfig: &RuntimeConfig{},
+		},
 		ContainerConfig: &container.Config{
 			Hostname:        "",
 			Domainname:      "",
@@ -24,7 +32,7 @@ func CreateContainer(imageID string) Factory {
 			Cmd:             nil,
 			Healthcheck:     nil,
 			ArgsEscaped:     false,
-			Image:           "",
+			Image:           imageID,
 			Volumes:         nil,
 			WorkingDir:      "",
 			Entrypoint:      nil,
@@ -44,12 +52,12 @@ func CreateContainer(imageID string) Factory {
 
 // Factory interface
 func (container *BaseContainer) Create() error {
-	body, err := cli.ContainerCreate(context.Background(), container.ContainerConfig, container.HostConfig, nil, container.Name)
+	body, err := cli.ContainerCreate(context.Background(), container.ContainerConfig, container.HostConfig, nil, container.Base.Name)
 	if err != nil {
 		return err
 	}
-	container.ContainerId = body.ID
-	logger.Debugf("The container %s created successfully", container.ContainerId)
+	container.Base.ID = body.ID
+	logger.Debugf("The container %s created successfully", container.Base.ID)
 	return nil
 }
 
@@ -57,12 +65,15 @@ func (container *BaseContainer) SetName(name string) error {
 	if name == "" {
 		return nil
 	}
-	container.Name = name
+	container.Base.Name = name
 	return nil
 }
 
-func (container *BaseContainer) SetImage(imageID string) {
-	container.ImageID = imageID
+func (container *BaseContainer) SetImage(imageID string, path string) {
+	container.Base.ImageType = "docker"
+	container.Base.ImagePath = path
+	container.ContainerConfig.Image = imageID
+	container.Base.ImageID = imageID
 }
 
 func (container *BaseContainer) SetHostname(name string) {
@@ -81,7 +92,7 @@ func (container *BaseContainer) SetVolumes(volumes []*Volume) {
 		if dest == "" {
 			continue
 		}
-		container.RuntimeConfig.Volumes[dest] = v
+		container.Base.RuntimeConfig.Volumes[dest] = v
 	}
 }
 
@@ -128,11 +139,11 @@ func (container *BaseContainer) SetTTY(tty bool) {
 }
 
 func (container *BaseContainer) SetExposedPorts(info []proxy.ProxyInfo) {
-	container.RuntimeConfig.ProxyManager = proxy.GetProxyManager()
-	if len(container.RuntimeConfig.Networks) == 0 {
+	container.Base.RuntimeConfig.ProxyManager = proxy.GetProxyManager()
+	if len(container.Base.RuntimeConfig.Networks) == 0 {
 		return
 	}
-	container.RuntimeConfig.ExposedPorts = info
+	container.Base.RuntimeConfig.ExposedPorts = info
 }
 
 func (container *BaseContainer) SetHosts(hosts []string) {
@@ -144,11 +155,5 @@ func (container *BaseContainer) SetTTYSize(width, height uint16) {
 }
 
 func (container *BaseContainer) GetBase() (*Base, error) {
-	return &Base{
-		IsDocker:       true,
-		ImageID:        container.ImageID,
-		ID:             container.ContainerId,
-		Name:           container.Name,
-		RuntimeSetting: container.RuntimeConfig,
-	}, nil
+	return container.Base, nil
 }

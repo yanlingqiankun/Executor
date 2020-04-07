@@ -2,45 +2,53 @@ package machine
 
 import (
 	"encoding/xml"
-	"github.com/docker/docker/pkg/stringid"
 	libvirtxml "github.com/libvirt/libvirt-go-xml"
 	"github.com/yanlingqiankun/Executor/conf"
 	"github.com/yanlingqiankun/Executor/image"
 	"github.com/yanlingqiankun/Executor/network/proxy"
-	"path/filepath"
+	"github.com/yanlingqiankun/Executor/stringid"
+	"github.com/yanlingqiankun/Executor/util"
 	"strconv"
 )
 
-
 func CreateVM(imageID string) Factory {
+	uuid, err := stringid.GetStanderUUID()
+	if err != nil {
+		logger.WithError(err).Error("failed to get uuid")
+	}
 	vmType := conf.GetString("VMType")
 	VM := &BaseVM{
-		ImageID:       imageID,
+		BaseInfo:      &Base{
+			IsDocker:      false,
+			ImageID:       imageID,
+			ID:            "",
+			ImagePath:     "",
+			ImageType:     "",
+			Name:          "",
+			RuntimeConfig: &RuntimeConfig{},
+		},
 		VMConfig:      &libvirtxml.Domain{
 			XMLName:              xml.Name{},
 			Type:                 vmType,
+			UUID:                 uuid,
 			Memory:               &libvirtxml.DomainMemory{
-				Value:    0,
-				Unit:     "1024000",
+				Value:    1024000,
+				Unit:     "",
 				DumpCore: "",
 			},
-			CurrentMemory:        nil,
-			BlockIOTune:          nil,
-			MemoryTune:           nil,
-			MemoryBacking:        nil,
 			VCPU:                 &libvirtxml.DomainVCPU{
 				Placement: "",
 				CPUSet:    "",
 				Current:   "",
 				Value:     1,
 			},
-
 			OS:                  &libvirtxml.DomainOS{
 				Type:        &libvirtxml.DomainOSType{
 					Arch:    "x86_64",
 					Machine: "pc",
-					Type:    "",
+					Type:    "hvm",
 				},
+				BootDevices:append(make([]libvirtxml.DomainBootDevice, 0), libvirtxml.DomainBootDevice{Dev:"hd"}),
 			},
 			Devices:  &libvirtxml.DomainDeviceList{
 				Graphics:     append(make([]libvirtxml.DomainGraphic, 0), libvirtxml.DomainGraphic{
@@ -56,9 +64,7 @@ func CreateVM(imageID string) Factory {
 				}),
 			},
 		},
-		RuntimeConfig: &RuntimeConfig{},
 	}
-	VM.SetImage(imageID)
 	return VM
 }
 // Factory interface
@@ -71,7 +77,9 @@ func (VM *BaseVM) Create() error {
 	if err != nil {
 		return err
 	}
-	logger.Debugf("The VM %s created successfully", VM.VMConfig.ID)
+	id := util.UUIDTOID(VM.VMConfig.UUID)
+	VM.BaseInfo.ID = VM.VMConfig.UUID
+	logger.Debugf("The VM %s created successfully", id)
 	return nil
 }
 
@@ -83,70 +91,41 @@ func (VM *BaseVM) SetName(name string) error {
 	return nil
 }
 
-func (VM *BaseVM) SetImage(imageID string) {
-	VM.VMConfig.Devices = &libvirtxml.DomainDeviceList{}
+func (VM *BaseVM) SetImage(imageID string, path string) {
+	imageType := "iso"
+	device := "cdrom"
+	driver := &libvirtxml.DomainDiskDriver{}
+	if image.GetImageType(imageID) == "disk" {
+		imageType = "qcow2"
+		driver = &libvirtxml.DomainDiskDriver{
+			Name:         "qemu",
+			Type:         imageType,
+		}
+		device = "disk"
+	} else {
+		driver = nil
+	}
+	VM.BaseInfo.ImageType = imageType
+	if VM.VMConfig.Devices == nil {
+		VM.VMConfig.Devices = &libvirtxml.DomainDeviceList{}
+	}
 	VM.VMConfig.Devices.Disks = append(VM.VMConfig.Devices.Disks, libvirtxml.DomainDisk{
 		XMLName:      xml.Name{},
-		Device:       "disk",
-		RawIO:        "",
-		SGIO:         "",
-		Snapshot:     "",
-		Model:        "",
-		Driver:       &libvirtxml.DomainDiskDriver{
-			Name:         "qemu",
-			Type:         image.GetImageType(imageID),
-			Cache:        "none",
-			ErrorPolicy:  "",
-			RErrorPolicy: "",
-			IO:           "",
-			IOEventFD:    "",
-			EventIDX:     "",
-			CopyOnRead:   "",
-			Discard:      "",
-			IOThread:     nil,
-			DetectZeros:  "",
-			Queues:       nil,
-			IOMMU:        "",
-			ATS:          "",
-		},
+		Device:       device,
+		Driver:       driver,
 		Auth:         nil,
 		Source:       &libvirtxml.DomainDiskSource{
 			File:          &libvirtxml.DomainDiskSourceFile{
-				File:     filepath.Join(conf.GetString("RootPath"), "images", imageID, imageID),
+				File:     path,
 				SecLabel: nil,
 			},
-			Block:         nil,
-			Dir:           nil,
-			Network:       nil,
-			Volume:        nil,
-			NVME:          nil,
-			StartupPolicy: "",
-			Index:         0,
-			Encryption:    nil,
-			Reservations:  nil,
 		},
-		BackingStore: nil,
-		Geometry:     nil,
-		BlockIO:      nil,
-		Mirror:       nil,
 		Target:       &libvirtxml.DomainDiskTarget{
-			Dev:       "sda",
-			Bus:       "usb",
+			Dev:       "hdb",
+			Bus:       "ide",
 			Tray:      "",
 			Removable: "",
 		},
-		IOTune:       nil,
-		ReadOnly:     nil,
-		Shareable:    nil,
-		Transient:    nil,
-		Serial:       "",
-		WWN:          "",
-		Vendor:       "",
-		Product:      "",
-		Encryption:   nil,
-		Boot:         nil,
-		Alias:        nil,
-		Address:      nil,
 	})
 }
 
@@ -210,11 +189,11 @@ func (VM *BaseVM) SetTTY(tty bool) {
 }
 
 func (VM *BaseVM) SetExposedPorts(info []proxy.ProxyInfo) {
-	VM.RuntimeConfig.ProxyManager = proxy.GetProxyManager()
-	if len(VM.RuntimeConfig.Networks) == 0 {
+	VM.BaseInfo.RuntimeConfig.ProxyManager = proxy.GetProxyManager()
+	if len(VM.BaseInfo.RuntimeConfig.Networks) == 0 {
 		return
 	}
-	VM.RuntimeConfig.ExposedPorts = info
+	VM.BaseInfo.RuntimeConfig.ExposedPorts = info
 }
 
 func (VM *BaseVM) SetHosts(hosts []string) {
@@ -227,13 +206,7 @@ func (VM *BaseVM) SetTTYSize(width, height uint16) {
 }
 
 func (VM *BaseVM) GetBase() (*Base, error) {
-	return &Base{
-		IsDocker:       true,
-		ImageID:        VM.ImageID,
-		ID:             VM.VMConfig.UUID,
-		Name:           VM.VMConfig.Name,
-		RuntimeSetting: VM.RuntimeConfig,
-	}, nil
+	return VM.BaseInfo, nil
 }
 
 
@@ -248,13 +221,9 @@ func (VM *BaseVM) SetNetworks(networks []*Network) {
 		}
 
 	}
-	VM.RuntimeConfig.Networks = networks
+	VM.BaseInfo.RuntimeConfig.Networks = networks
 }
 
 func (VM *BaseVM) SetRoutes([]*Route) {
 	panic("implement me")
 }
-
-
-
-

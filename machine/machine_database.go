@@ -3,6 +3,7 @@ package machine
 
 import (
 	"encoding/json"
+	"github.com/yanlingqiankun/Executor/util"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -21,6 +22,13 @@ type dbItem struct {
 
 func (db *machineDB) init() {
 	logger.Debug("load machine database from disk")
+	if !util.PathExist(machineRootDir) {
+		err := os.MkdirAll(machineRootDir, 0600)
+		if err != nil {
+			logger.WithError(err).Error("failed to create machine root dir")
+			return
+		}
+	}
 	data, err := ioutil.ReadFile(filepath.Join(machineRootDir, "machines.json"))
 	if err != nil {
 		if os.IsExist(err) {
@@ -42,7 +50,6 @@ func (db *machineDB) init() {
 				db.add(machine, path)
 				counts += 1
 			}
-
 		}
 		logger.Printf("found %d machines", counts)
 	}
@@ -102,6 +109,9 @@ func (db *machineDB) convertToMap() map[string]*dbItem {
 
 func (db *machineDB) saveItem(id string) {
 	logger.Debug("saving a machine")
+	if !util.PathExist(filepath.Join(machineRootDir, id)) {
+		_ = os.MkdirAll(filepath.Join(machineRootDir, id), 0600)
+	}
 	if item, ok := db.getItem(id); ok {
 		data, _ := json.Marshal(item.machine)
 		err := ioutil.WriteFile(item.StoragePath, data, 0600)

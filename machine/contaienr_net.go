@@ -20,7 +20,7 @@ func (container *BaseContainer) SetNetworks(networks []*Network) {
 		}
 
 	}
-	container.RuntimeConfig.Networks = networks
+	container.Base.RuntimeConfig.Networks = networks
 
 	// 添加默认路由
 	if len(networks) > 0 {
@@ -34,7 +34,7 @@ func (container *BaseContainer) SetNetworks(networks []*Network) {
 }
 
 func (container *BaseContainer) SetRoutes(routes []*Route) {
-	container.RuntimeConfig.Routes = routes
+	container.Base.RuntimeConfig.Routes = routes
 }
 
 func (nw *Network) connectBridge() error {

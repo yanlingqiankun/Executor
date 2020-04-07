@@ -20,7 +20,7 @@ type Factory interface {
 	SetTTY(bool)                   // 设置是否使用终端
 	SetNetworks([]*Network)        // 添加网络
 	SetRoutes([]*Route)            // 添加路由
-	SetImage(string)               // 添加镜像地址
+	SetImage(string, string)               // 添加镜像地址
 	SetVolumes([]*Volume)          // 添加卷
 	SetEntrypoint([]string)        // EntryPoint (entrypoint, cmd)
 	SetCmd([]string)               // Cmd
@@ -35,9 +35,11 @@ type Factory interface {
 }
 
 type Base struct {
-	IsDocker 	   bool             `json:"is_docker"`
+	IsDocker       bool             `json:"is_docker"`
 	ImageID 	   string			`json:"image_id"`
 	ID             string          `json:"id"`
+	ImagePath      string 			`json:"image_path"`
+	ImageType 	   string           `json:"image_type"`
 	Name           string          `json:"name"` // 名字
-	RuntimeSetting *RuntimeConfig  `json:"runtime_config"` // 运行配置
+	RuntimeConfig *RuntimeConfig  `json:"runtime_config"` // 运行配置
 }

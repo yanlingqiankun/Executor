@@ -19,4 +19,5 @@ type Image interface {
 	GetType() (bool, string)
 	Register()
 	UnRegister()
+	GetPath() string
 }

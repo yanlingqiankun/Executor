@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"regexp"
 	"time"
@@ -69,4 +70,13 @@ func ValidateID(id string) error {
 		return fmt.Errorf("ID %q is invalid", id)
 	}
 	return nil
+}
+
+func GetStanderUUID() (string, error) {
+	data, err := ioutil.ReadFile("/proc/sys/kernel/random/uuid")
+	if err != nil {
+		return "", err
+	} else {
+		return string(data), nil
+	}
 }
