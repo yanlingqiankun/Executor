@@ -17,9 +17,11 @@ func (s server) ImportImage(ctx context.Context, req *pb.ImportImageReq) (*pb.Im
 func importImage (req *pb.ImportImageReq) (*pb.ImportImageResp, error) {
 	var id string
 	var err error
-	if req.Type == "vm-iso" || req.Type == "docker-pull" || req.Type == "docker-repo" {
+	if req.Type == "vm-iso" || req.Type == "docker-pull" || req.Type == "docker-repo" || req.Type == "vm-disk"{
 		if req.Type == "vm-iso" {
 			id, err = image.QEMUImageSave(req.Name, "iso", req.Path)
+		} else if req.Type == "vm-disk" {
+			id, err = image.QEMUImageSave(req.Name,"disk", req.Path)
 		} else if req.Type == "docker-pull" {
 			id, err = image.PullDockerImage(context.Background(), req.Name)
 		} else if req.Type == "docker-repo" {
