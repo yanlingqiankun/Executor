@@ -55,6 +55,9 @@ func UnpauseContainer(containerID string) error {
 }
 
 func KillContainer(containerID string, signal string) error {
+	if !checkStatus(containerID, StatusRunning, StatusPaused) {
+		return fmt.Errorf("can't kill the container not running or paused")
+	}
 	if err := cli.ContainerKill(context.Background(), containerID, signal); err != nil {
 		return fmt.Errorf("failed to kill container %s with error : %s", containerID, err.Error())
 	}
@@ -71,6 +74,9 @@ func poststopHookContainer(containerID string) {
 }
 
 func StopContainer(timeout int32, containerID string) error {
+	if !checkStatus(containerID, StatusRunning, StatusPaused) {
+		return fmt.Errorf("can't stop the container not running or paused")
+	}
 	duration := time.Duration(timeout)*time.Second
 	if err := cli.ContainerStop(context.Background(), containerID, &duration); err != nil {
 		logger.WithError(err).Error("failed to stop container")
@@ -79,7 +85,10 @@ func StopContainer(timeout int32, containerID string) error {
 	return nil
 }
 
-func RestartContainer(timeout int, containerID string) error {
+func RestartContainer(timeout int32, containerID string) error {
+	if !checkStatus(containerID, StatusRunning, StatusPaused) {
+		return fmt.Errorf("can't stop the container not running or paused")
+	}
 	duration := time.Duration(timeout) * time.Second
 	if err := cli.ContainerRestart(context.Background(), containerID, &duration); err != nil {
 		logger.WithError(err).Error("failed to restart container")

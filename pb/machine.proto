@@ -70,3 +70,8 @@ message RenameMachineReq {
     string name = 2; // 新名字
 }
 
+message RestartMachineReq {
+    string id = 1;
+    int32 timeout = 2; // 为 kill container 设置的超时时间
+}
+

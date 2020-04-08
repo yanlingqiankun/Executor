@@ -15,7 +15,7 @@ func GetMachineCmd() *cobra.Command {
 		GetMachineKillCmd(),
 		GetMachineDeleteCmd(),
 		GetMachineRenameCmd(),
-		//GetContainerRestartCmd(),
+		GetMachineRestartCmd(),
 		GetMachineStartCmd(),
 		GetMachineStopCmd(),
 		//GetContainerInspectCmd(),

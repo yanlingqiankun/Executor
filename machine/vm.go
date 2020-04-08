@@ -161,10 +161,18 @@ func StopVM(timeout int32, UUID string) error {
 	return nil
 }
 
-func RestartVM(timeout int, UUID string) error {
+func RestartVM(timeout int32, UUID string) error {
 	domain, err := libconn.LookupDomainByUUIDString(UUID)
 	if err != nil {
 		return err
+	}
+	domainInfo, err := domain.GetInfo()
+	if err != nil {
+		return err
+	}
+	state := domainInfo.State
+	if state == libvirt.DOMAIN_SHUTOFF || state == libvirt.DOMAIN_SHUTDOWN {
+		return fmt.Errorf("vm is not running")
 	}
 	defer domain.Free()
 

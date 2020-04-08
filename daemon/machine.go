@@ -310,3 +310,26 @@ func renameMachine(id, newName string) error {
 	}
 	return nil
 }
+
+func (s server) RestartMachine(ctx context.Context, req *pb.RestartMachineReq) (*pb.Error, error) {
+	if err := restartMachine(req.Id, req.Timeout); err != nil {
+		return newErr(1, err), err
+	} else {
+		return newErr(0, err), err
+	}
+}
+
+func restartMachine(id string, timeout int32) error {
+	m, err := machine.GetMachine(id)
+	if err != nil {
+		logger.WithError(err).Error("failed to get get machine")
+		return err
+	}
+	err = m.Restart(timeout)
+	if err != nil {
+		logger.WithError(err).Error("failed to restart machine")
+		return err
+	}
+	logger.Debugf("machine %s has restarted", id)
+	return nil
+}

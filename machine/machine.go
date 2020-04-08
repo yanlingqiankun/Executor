@@ -153,11 +153,11 @@ func (m *Base) Stop(timeout int32) error {
 	}
 }
 
-func (m *Base) Restart(timeout int) error {
+func (m *Base) Restart(timeout int32) error {
 	if m.IsDocker {
 		return RestartContainer(timeout, m.ID)
 	} else {
-		return StartVM(m.ID)
+		return RestartVM(timeout, m.ID)
 	}
 }
 
