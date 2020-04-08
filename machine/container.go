@@ -70,7 +70,7 @@ func poststopHookContainer(containerID string) {
 	return
 }
 
-func StopContainer(timeout int, containerID string) error {
+func StopContainer(timeout int32, containerID string) error {
 	duration := time.Duration(timeout)*time.Second
 	if err := cli.ContainerStop(context.Background(), containerID, &duration); err != nil {
 		logger.WithError(err).Error("failed to stop container")

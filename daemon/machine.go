@@ -263,3 +263,27 @@ func killMachine(id string, signal string) error {
 	logger.Debugf("%s has been kill", id)
 	return nil
 }
+
+
+func (s server) StopMachine(ctx context.Context, req *pb.StopMachineReq) (*pb.Error, error) {
+	err := stopMachine(req.Id, req.Timeout)
+	if err != nil {
+		return newErr(1, err), err
+	} else {
+		return newErr(0, err), err
+	}
+}
+
+func stopMachine(id string, timeout int32) error {
+	m, err := machine.GetMachine(id)
+	if err != nil {
+		logger.WithError(err).Error("failed to get get machine")
+		return err
+	}
+	err = m.Stop(timeout)
+	if err != nil {
+		logger.WithError(err).Error("failed to stop machine")
+		return err
+	}
+	return nil
+}

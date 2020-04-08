@@ -59,3 +59,8 @@ message KillMachineReq {
     string id = 1;
     string signal = 2;
 }
+
+message StopMachineReq {
+    string id = 1;
+    int32 timeout = 2;
+}

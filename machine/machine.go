@@ -142,11 +142,14 @@ func (m *Base) Delete() error {
 	return nil
 }
 
-func (m *Base) Stop(timeout int) error {
+func (m *Base) Stop(timeout int32) error {
+	if timeout < 1 {
+		return fmt.Errorf("timeout must bigger than 0")
+	}
 	if m.IsDocker {
 		return StopContainer(timeout, m.ID)
 	} else {
-		return StartVM(m.ID)
+		return StopVM(timeout, m.ID)
 	}
 }
 

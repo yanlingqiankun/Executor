@@ -11,7 +11,7 @@ type Machine interface {
 	Pause() error                   // 暂停
 	Unpause() error                 // 恢复
 	Delete() error                  // 删除这个machine所占用的资源
-	Stop(int) error                 // 停止
+	Stop(int32) error                 // 停止
 	Restart(int) error              // 重启
 	GetImageID() string             //
 }

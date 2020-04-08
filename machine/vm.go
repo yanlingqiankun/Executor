@@ -3,6 +3,7 @@ package machine
 import (
 	"fmt"
 	"github.com/libvirt/libvirt-go"
+	"time"
 )
 
 func StartVM(UUID string) error {
@@ -17,7 +18,7 @@ func StartVM(UUID string) error {
 	}
 	state := domainInfo.State
 	if state != libvirt.DOMAIN_SHUTDOWN && state != libvirt.DOMAIN_SHUTOFF && state != libvirt.DOMAIN_NOSTATE {
-		return fmt.Errorf("vm is Running, don't start a running container")
+		return fmt.Errorf("vm is Running, don't start a running vm")
 	}
 
 	err = domain.Create()
@@ -125,12 +126,11 @@ func poststopHook(containerID string) {
 	return
 }
 
-func StopVM(timeout int, UUID string) error {
+func StopVM(timeout int32, UUID string) error {
 	domain, err := libconn.LookupDomainByUUIDString(UUID)
 	if err != nil {
 		return err
 	}
-	defer domain.Free()
 	domainInfo, err := domain.GetInfo()
 	if err != nil {
 		return err
@@ -139,7 +139,26 @@ func StopVM(timeout int, UUID string) error {
 	if state == libvirt.DOMAIN_SHUTOFF || state == libvirt.DOMAIN_SHUTDOWN {
 		return fmt.Errorf("vm is not running")
 	}
-	return domain.Shutdown()
+	go func(){
+		ticker := time.NewTicker(time.Duration(timeout)*time.Second)
+		select {
+		case <-ticker.C:
+			if domain == nil {
+				return
+			}
+			if ok, err := domain.IsActive(); err != nil {
+				return
+			} else if ok {
+				domain.Destroy()
+			}
+		}
+		ticker.Stop()
+	}()
+	err = domain.DestroyFlags(libvirt.DOMAIN_DESTROY_GRACEFUL)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func RestartVM(timeout int, UUID string) error {
