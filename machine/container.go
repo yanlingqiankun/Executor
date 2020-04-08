@@ -111,3 +111,7 @@ func getContainerState(id string) (string, error) {
 	}
 	return inspcet.State.Status, nil
 }
+
+func renameContainer(id string, newName string) error {
+	return cli.ContainerRename(context.Background(), id, newName)
+}

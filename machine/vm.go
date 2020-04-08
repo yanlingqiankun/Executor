@@ -209,3 +209,16 @@ func getVMState(id string) (string, error){
 		return states[int(state)], nil
 	}
 }
+
+func renameVM(id string, newName string) error {
+	dom, err := libconn.LookupDomainByUUIDString(id)
+	if err != nil {
+		return err
+	}
+	defer dom.Free()
+	err = dom.Rename(newName, 0)
+	if err != nil {
+		return err
+	}
+	return nil
+}

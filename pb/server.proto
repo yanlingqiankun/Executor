@@ -27,4 +27,5 @@ service Executor {
     rpc StartMachine(StartMachineReq) returns (Error) {}
     rpc KillMachine(KillMachineReq) returns (Error) {}
     rpc StopMachine(StopMachineReq) returns (Error) {}
+    rpc RenameMachine(RenameMachineReq) returns (Error) {}
 }

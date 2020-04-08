@@ -209,13 +209,19 @@ func (container *Base) configNetwork() error {
 	return nil
 }
 
-func CreateMachine(imageID string, machineType string) (Factory, error) {
-	if machineType == "container" {
-		return CreateContainer(imageID), nil
-	} else if machineType == "vm" {
-		return CreateVM(imageID), nil
+func (m *Base) Rename(newName string) error {
+	var err error
+	if m.IsDocker {
+		err = renameContainer(m.ID, newName)
 	} else {
-		logger.Errorf("Error machine type")
-		return nil, fmt.Errorf("Error machine type")
+		err = renameVM(m.ID, newName)
 	}
+	if err != nil {
+		logger.WithError(err).Error("failed to rename machine")
+		return err
+	}
+	m.Name = newName
+	db.save(true, m.ID)
+	logger.Debugf("rename machine %s to %s", m.ID, m.Name)
+	return nil
 }

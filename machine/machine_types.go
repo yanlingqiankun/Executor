@@ -14,6 +14,7 @@ type Machine interface {
 	Stop(int32) error                 // 停止
 	Restart(int) error              // 重启
 	GetImageID() string             //
+	Rename(string) error            // rename
 }
 
 type Factory interface {

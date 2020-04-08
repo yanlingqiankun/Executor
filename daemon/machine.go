@@ -287,3 +287,26 @@ func stopMachine(id string, timeout int32) error {
 	}
 	return nil
 }
+
+func (s server) RenameMachine(ctx context.Context, req *pb.RenameMachineReq) (*pb.Error, error) {
+	err := renameMachine(req.Id, req.Name)
+	if err != nil {
+		return newErr(1, err), err
+	} else {
+		return newErr(0, err), err
+	}
+}
+
+func renameMachine(id, newName string) error {
+	m, err := machine.GetMachine(id)
+	if err != nil {
+		logger.WithError(err).Error("failed to get get machine")
+		return err
+	}
+	err = m.Rename(newName)
+	if err != nil {
+		logger.WithError(err).Error("failed rename machine")
+		return err
+	}
+	return nil
+}
