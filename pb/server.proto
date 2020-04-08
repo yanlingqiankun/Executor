@@ -24,4 +24,5 @@ service Executor {
     rpc CreateMachine(CreateMachineReq) returns (CreateMachineResp) {}
     rpc DeleteMachine(DeleteMachineReq) returns (Error) {}
     rpc ListMachine(google.protobuf.Empty) returns (ListMachineResp) {}
+    rpc StartMachine(StartMachineReq) returns (Error) {}
 }

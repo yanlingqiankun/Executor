@@ -80,11 +80,10 @@ func PullDockerImage(ctx context.Context, name string) (string, error) {
 }
 
 func GetImageFromDocker(name string) (string, error) {
-	imageInfo, _, err := cli.ImageInspectWithRaw(context.Background(), name)
-	if err != nil {
-		return "", err
+	id, _ := getDockerImageID(name)
+	if id == "" {
+		return "", fmt.Errorf("can't find %s in docker repo", name)
 	}
-	id, _ := getDockerImageID(imageInfo.ID)
 	if _, ok := db[id]; ok {
 		logger.Error("The image has be in the image repo")
 		return "", fmt.Errorf("The image has be in the image repo")
@@ -106,5 +105,6 @@ func getDockerImageID (name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimLeft(inspect.ID, "sha256:"), nil
+	logger.Debugf("get %s id = %s in docker repo", name, inspect.ID)
+	return strings.ReplaceAll(inspect.ID, "sha256:", ""), nil
 }

@@ -28,10 +28,10 @@ func (s server) CreateMachine(ctx context.Context, req *pb.CreateMachineReq) (*p
 }
 
 func createMachine (req *pb.CreateMachineReq) (string, error) {
-	logger.Debug("create container req ", req)
-	if err := stringid.ValidateID(req.ImageId); err != nil {
-		return "", err
-	}
+	logger.Debug("create machine req ", req)
+	//if err := stringid.ValidateID(req.ImageId); err != nil {
+	//	return "", err
+	//}
 	img, err := image.OpenImage(req.ImageId)
 	if err != nil {
 		return "", err
@@ -220,4 +220,22 @@ func listMachine() *pb.ListMachineResp {
 		MachineInfos:         machines,
 		Err:                  nil,
 	}
+}
+
+
+func (s server) StartMachine(ctx context.Context, req *pb.StartMachineReq) (*pb.Error, error) {
+	err := startMachine(req.Id)
+	if err != nil {
+		return newErr(1, err), err
+	} else {
+		return newErr(0, err), err
+	}
+}
+
+func startMachine(id string) error {
+	m, err := machine.GetMachine(id)
+	if err != nil {
+		return err
+	}
+	return m.Start()
 }

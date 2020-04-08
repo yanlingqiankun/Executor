@@ -46,3 +46,7 @@ message MachineInfo {
     string status = 6;
     string image_id = 7;
 }
+
+message StartMachineReq {
+    string id = 1;
+}

@@ -16,11 +16,16 @@ func StartVM(UUID string) error {
 		return err
 	}
 	state := domainInfo.State
-	if state != libvirt.DOMAIN_SHUTDOWN || state != libvirt.DOMAIN_SHUTOFF || state != libvirt.DOMAIN_NOSTATE {
+	if state != libvirt.DOMAIN_SHUTDOWN && state != libvirt.DOMAIN_SHUTOFF && state != libvirt.DOMAIN_NOSTATE {
 		return fmt.Errorf("vm is Running, don't start a running container")
 	}
 
-	return domain.Create()
+	err = domain.Create()
+	if err != nil {
+		logger.WithError(err).Errorf("failed to start vm %s", UUID)
+		return err
+	}
+	return nil
 }
 
 func DeleteVM(UUID string) error {

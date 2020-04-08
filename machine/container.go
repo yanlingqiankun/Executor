@@ -15,6 +15,7 @@ func StartContainer(containerID string) error {
 
 	err := cli.ContainerStart(context.Background(), containerID, types.ContainerStartOptions{})
 	if err != nil {
+		logger.WithError(err).Errorf("failed to start container %s", containerID)
 		return fmt.Errorf("failed to start container with error %s", err.Error())
 	}
 	return nil
