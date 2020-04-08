@@ -2,6 +2,7 @@ package machine
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"time"
@@ -84,4 +85,28 @@ func RestartContainer(timeout int, containerID string) error {
 		return err
 	}
 	return nil
+}
+
+func getContainerInfo(id string) ([]byte, error){
+	_, data, err:= cli.ContainerInspectWithRaw(context.Background(), id, false)
+	if err != nil {
+		logger.WithError(err).Errorf("failed to get information of container %s ", id)
+		return nil, err
+	} else {
+		return data, nil
+	}
+}
+
+func getContainerState(id string) (string, error) {
+	var inspcet types.ContainerJSON
+	data, err := getContainerInfo(id)
+	if err != nil {
+		return "", err
+	} else {
+		err = json.Unmarshal(data, &inspcet)
+		if err != nil {
+			return "", err
+		}
+	}
+	return inspcet.State.Status, nil
 }

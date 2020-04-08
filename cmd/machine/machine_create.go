@@ -3,6 +3,7 @@ package machine
 import (
 	"context"
 	"fmt"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/spf13/cobra"
 	"github.com/yanlingqiankun/Executor/cmd/connection"
 	"github.com/yanlingqiankun/Executor/cmd/image"
@@ -175,43 +176,43 @@ func machineCreateHandle(cmd *cobra.Command, args []string) {
 	}
 }
 //
-//func CheckNameOrId(machineId string) string {
-//	imageListResp, err := connection.Client.Listmachine(context.Background(), &empty.Empty{})
-//	if err != nil {
-//		panic(err)
-//	}
-//
-//	isNameFlag := false
-//	isIdFlag := false
-//
-//	for _, v := range imageListResp.machines {
-//		if machineId == v.Name {
-//			isNameFlag = true
-//			machineId = v.Id
-//			break
-//		}
-//
-//		if len(machineId) == 12 {
-//			if machineId == v.Id[:12] {
-//				isIdFlag = true
-//				machineId = v.Id
-//				break
-//			}
-//		} else {
-//			if machineId == v.Id {
-//				isIdFlag = true
-//				machineId = v.Id
-//				break
-//			}
-//		}
-//	}
-//
-//	if !(isNameFlag || isIdFlag) {
-//		panic("No machine named: " + machineId)
-//	}
-//
-//	return machineId
-//}
+func CheckNameOrId(machineId string) string {
+	imageListResp, err := connection.Client.ListMachine(context.Background(), &empty.Empty{})
+	if err != nil {
+		panic(err)
+	}
+
+	isNameFlag := false
+	isIdFlag := false
+
+	for _, v := range imageListResp.MachineInfos {
+		if machineId == v.Name {
+			isNameFlag = true
+			machineId = v.Id
+			break
+		}
+
+		if len(machineId) == 12 {
+			if machineId == v.Id[:12] {
+				isIdFlag = true
+				machineId = v.Id
+				break
+			}
+		} else {
+			if machineId == v.Id {
+				isIdFlag = true
+				machineId = v.Id
+				break
+			}
+		}
+	}
+
+	if !(isNameFlag || isIdFlag) {
+		panic("No machine named: " + machineId)
+	}
+
+	return machineId
+}
 //
 //func MountHandle(mountStrList []string) (volumes []*pb.machineVolume) {
 //

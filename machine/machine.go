@@ -6,8 +6,11 @@ import (
 	"github.com/libvirt/libvirt-go"
 	"github.com/yanlingqiankun/Executor/conf"
 	"github.com/yanlingqiankun/Executor/logging"
+	"os"
 	"path/filepath"
 )
+
+const TIME_LAYOUT = "2006-01-02 15:04:05.999999999 -0700 MST"
 
 var logger = logging.GetLogger("machine")
 var machineRootDir string
@@ -29,6 +32,41 @@ func init() {
 		logger.Fatalf("failed to connect to qemu")
 	}
 	db.init()
+}
+
+func ListMachine() []MachineInfo {
+	list := make([]MachineInfo, 0)
+	var err error
+	db.Range(func(k, v interface{}) bool {
+		item := v.(*dbItem)
+		m := item.machine
+		state := ""
+		if m.IsDocker {
+			state, err = getContainerState(m.ID)
+			if err != nil {
+				logger.WithError(err).Errorf("failed to get %s state", m.ID)
+				state = "unknown"
+			}
+		} else {
+			state, err = getVMState(m.ID)
+			if err != nil {
+				logger.WithError(err).Errorf("failed to get %s state", m.ID)
+				state = "unknown"
+			}
+		}
+		info := MachineInfo{
+			ID:      m.ID,
+			Name:    m.Name,
+			ImageName: m.ImageName,
+			ImageType : m.ImageType,
+			CreateTime: m.CreateTime.Format(TIME_LAYOUT),
+			Status:  state,
+			ImageId: m.ImageID,
+		}
+		list = append(list, info)
+		return true
+	})
+	return list
 }
 
 func GetMachine(id string) (Machine, error) {
@@ -83,10 +121,25 @@ func (m *Base) Unpause() error {
 
 func (m *Base) Delete() error {
 	if m.IsDocker {
-		return DeleteContainer(m.ID)
+		if err := DeleteContainer(m.ID); err != nil {
+			return err
+		}
 	} else {
-		return DeleteVM(m.ID)
+		if err := DeleteVM(m.ID); err != nil {
+			logger.WithError(err).Error("failed to delete VM ", m.ID)
+			return err
+		}
+		if m.ImageType == "disk"{
+			err := os.Remove(m.ImagePath)
+			if err != nil {
+				return err
+			}
+		}
 	}
+	db.Delete(m.ID)
+	db.save(false, "")
+	logger.Debugf("%s has removed sussessfully", m.ID)
+	return nil
 }
 
 func (m *Base) Stop(timeout int) error {
@@ -103,6 +156,10 @@ func (m *Base) Restart(timeout int) error {
 	} else {
 		return StartVM(m.ID)
 	}
+}
+
+func (m *Base) GetImageID() string {
+	return m.ImageID
 }
 
 func (container *Base) configNetwork() error {

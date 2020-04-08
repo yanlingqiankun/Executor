@@ -20,4 +20,5 @@ type Image interface {
 	Register()
 	UnRegister()
 	GetPath() string
+	GetName() string
 }

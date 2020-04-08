@@ -9,6 +9,7 @@ import (
 	"github.com/yanlingqiankun/Executor/stringid"
 	"github.com/yanlingqiankun/Executor/util"
 	"strconv"
+	"time"
 )
 
 func CreateVM(imageID string) Factory {
@@ -78,7 +79,7 @@ func (VM *BaseVM) Create() error {
 		return err
 	}
 	id := util.UUIDTOID(VM.VMConfig.UUID)
-	VM.BaseInfo.ID = VM.VMConfig.UUID
+	VM.BaseInfo.ID = id
 	logger.Debugf("The VM %s created successfully", id)
 	return nil
 }
@@ -88,10 +89,12 @@ func (VM *BaseVM) SetName(name string) error {
 		return nil
 	}
 	VM.VMConfig.Name = name
+	VM.BaseInfo.Name = name
 	return nil
 }
 
-func (VM *BaseVM) SetImage(imageID string, path string) {
+func (VM *BaseVM) SetImage(imageID string, path string, name string) {
+	VM.BaseInfo.ImageName = name
 	imageType := "iso"
 	device := "cdrom"
 	driver := &libvirtxml.DomainDiskDriver{}
@@ -102,10 +105,11 @@ func (VM *BaseVM) SetImage(imageID string, path string) {
 			Type:         imageType,
 		}
 		device = "disk"
+		VM.BaseInfo.ImagePath = path
 	} else {
 		driver = nil
 	}
-	VM.BaseInfo.ImageType = imageType
+	VM.BaseInfo.ImageType = image.GetImageType(imageID)
 	if VM.VMConfig.Devices == nil {
 		VM.VMConfig.Devices = &libvirtxml.DomainDeviceList{}
 	}
@@ -172,16 +176,7 @@ func (VM *BaseVM) SetUser(user string) {
 }
 
 func (VM *BaseVM) SetEnv(env []string) {
-	if env == nil || len(env) == 0 {
-		return
-	}
-	m := envSliceToMap(env)
-	for k, v := range m {
-		VM.VMConfig.OS.InitEnv = append(VM.VMConfig.OS.InitEnv, libvirtxml.DomainOSInitEnv{
-			Name:  k,
-			Value: v,
-		})
-	}
+	return
 }
 
 func (VM *BaseVM) SetTTY(tty bool) {
@@ -206,6 +201,7 @@ func (VM *BaseVM) SetTTYSize(width, height uint16) {
 }
 
 func (VM *BaseVM) GetBase() (*Base, error) {
+	VM.BaseInfo.CreateTime = time.Now()
 	return VM.BaseInfo, nil
 }
 

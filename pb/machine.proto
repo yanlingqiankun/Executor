@@ -27,3 +27,22 @@ message CreateMachineResp {
     string id = 1;
     Error err = 2;
 }
+
+message DeleteMachineReq {
+    string id = 1;
+}
+
+message ListMachineResp {
+    repeated MachineInfo machine_infos = 1;
+    Error err = 2;
+}
+
+message MachineInfo {
+    string id = 1;
+	string name = 2;
+	string image_name = 3;
+	string image_type = 4;
+	string create_time = 5;
+    string status = 6;
+    string image_id = 7;
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/docker/docker/api/types/container"
 	"github.com/yanlingqiankun/Executor/network/proxy"
+	"time"
 )
 
 func CreateContainer(imageID string) Factory {
@@ -69,9 +70,10 @@ func (container *BaseContainer) SetName(name string) error {
 	return nil
 }
 
-func (container *BaseContainer) SetImage(imageID string, path string) {
+func (container *BaseContainer) SetImage(imageID string, path string, name string) {
 	container.Base.ImageType = "docker"
 	container.Base.ImagePath = path
+	container.Base.ImageName = name
 	container.ContainerConfig.Image = imageID
 	container.Base.ImageID = imageID
 }
@@ -155,5 +157,6 @@ func (container *BaseContainer) SetTTYSize(width, height uint16) {
 }
 
 func (container *BaseContainer) GetBase() (*Base, error) {
+	container.Base.CreateTime = time.Now()
 	return container.Base, nil
 }

@@ -5,6 +5,7 @@ package pb;
 import "pb/network.proto";
 import "pb/image.proto";
 import "pb/machine.proto";
+import "pb/common.proto";
 import "google/protobuf/empty.proto";
 
 service Executor {
@@ -21,4 +22,6 @@ service Executor {
 
     // machine
     rpc CreateMachine(CreateMachineReq) returns (CreateMachineResp) {}
+    rpc DeleteMachine(DeleteMachineReq) returns (Error) {}
+    rpc ListMachine(google.protobuf.Empty) returns (ListMachineResp) {}
 }

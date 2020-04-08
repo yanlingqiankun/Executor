@@ -2,6 +2,7 @@ package machine
 
 import (
 	"github.com/yanlingqiankun/Executor/network/proxy"
+	"time"
 )
 
 type Machine interface {
@@ -12,6 +13,7 @@ type Machine interface {
 	Delete() error                  // 删除这个machine所占用的资源
 	Stop(int) error                 // 停止
 	Restart(int) error              // 重启
+	GetImageID() string             //
 }
 
 type Factory interface {
@@ -20,7 +22,7 @@ type Factory interface {
 	SetTTY(bool)                   // 设置是否使用终端
 	SetNetworks([]*Network)        // 添加网络
 	SetRoutes([]*Route)            // 添加路由
-	SetImage(string, string)               // 添加镜像地址
+	SetImage(string, string, string)               // 添加镜像地址
 	SetVolumes([]*Volume)          // 添加卷
 	SetEntrypoint([]string)        // EntryPoint (entrypoint, cmd)
 	SetCmd([]string)               // Cmd
@@ -38,8 +40,20 @@ type Base struct {
 	IsDocker       bool             `json:"is_docker"`
 	ImageID 	   string			`json:"image_id"`
 	ID             string          `json:"id"`
+	ImageName      string           `json:"imageName"`
 	ImagePath      string 			`json:"image_path"`
 	ImageType 	   string           `json:"image_type"`
 	Name           string          `json:"name"` // 名字
+	CreateTime     time.Time           `json:"create_time"`
 	RuntimeConfig *RuntimeConfig  `json:"runtime_config"` // 运行配置
+}
+
+type MachineInfo struct {
+	ImageName    string
+	ID           string
+	Name         string
+	CreateTime   string
+	ImageType    string
+	Status       string
+	ImageId      string
 }

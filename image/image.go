@@ -41,6 +41,8 @@ func init () {
 	if err != nil {
 		logger.WithError(err).Error("failed to get docker client")
 	}
+	level := logging.GetLevel(conf.GetString("LogLevel"))
+	logger.SetLevel(level)
 }
 
 func load () error {
@@ -137,6 +139,10 @@ func (image *ImageEntry) GetPath() string {
 		result = id
 	}
 	return filepath.Join(path, result)
+}
+
+func (image *ImageEntry) GetName() string {
+	return image.Name
 }
 
 func (image *ImageEntry) Register() {

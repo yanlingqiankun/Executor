@@ -3,6 +3,7 @@ package daemon
 import (
 	"context"
 	"fmt"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/yanlingqiankun/Executor/image"
 	"github.com/yanlingqiankun/Executor/machine"
 	"github.com/yanlingqiankun/Executor/network/proxy"
@@ -51,7 +52,7 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 		return "", err
 	}
 	//factory.SetImage(image.MountPoint())
-	factory.SetImage(req.ImageId, img.GetPath())
+	factory.SetImage(req.ImageId, img.GetPath(), img.GetName())
 	factory.SetTTY(req.Tty)
 	factory.SetCmd(req.Cmd)
 	factory.SetEnv(req.Env)
@@ -167,4 +168,56 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 	}
 	logger.Debugf("the machine name = %s has create successful", req.Name)
 	return machine.AddMachine(factory)
+}
+
+
+func (s server) DeleteMachine(ctx context.Context, req *pb.DeleteMachineReq) (*pb.Error, error) {
+	err := deleteMachine(req.Id)
+	if err != nil {
+		logger.WithError(err).Error("failed to delete machine ", req.Id)
+		return newErr(1, err), err
+	}
+	return newErr(0, err), err
+}
+
+func deleteMachine(id string) error {
+	m, err := machine.GetMachine(id)
+	if err != nil {
+		return err
+	}
+	imageId := m.GetImageID()
+	if img, err := image.OpenImage(imageId); err != nil{
+		logger.WithError(err).Error("failed to open image : ", imageId)
+		return fmt.Errorf("failed to open image : %s", imageId)
+	} else {
+		img.UnRegister()
+	}
+	err = m.Delete()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s server) ListMachine(context.Context, *empty.Empty) (*pb.ListMachineResp, error) {
+	return listMachine(), nil
+}
+
+func listMachine() *pb.ListMachineResp {
+	machines := make([]*pb.MachineInfo, 0)
+	for _, m := range machine.ListMachine() {
+		machines = append(machines, &pb.MachineInfo{
+			Id:                   m.ID,
+			Name:                 m.Name,
+			ImageName:            m.ImageName,
+			ImageType:            m.ImageType,
+			CreateTime:           m.CreateTime,
+			Status:               m.Status,
+			ImageId:              m.ImageId,
+		})
+	}
+	return &pb.ListMachineResp{
+		MachineInfos:         machines,
+		Err:                  nil,
+	}
 }
