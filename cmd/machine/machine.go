@@ -12,7 +12,7 @@ func GetMachineCmd() *cobra.Command {
 	}
 	machineCmd.AddCommand(
 		GetMachineCreateCmd(),
-		//GetContainerKillCmd(),
+		GetMachineKillCmd(),
 		GetMachineDeleteCmd(),
 		//GetContainerRenameCmd(),
 		//GetContainerRestartCmd(),

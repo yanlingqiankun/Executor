@@ -41,7 +41,7 @@ func DeleteVM(UUID string) error {
 	}
 	state := domainInfo.State
 	if state != libvirt.DOMAIN_SHUTDOWN && state != libvirt.DOMAIN_SHUTOFF {
-		return fmt.Errorf("vm is Running, can't destroy a running container")
+		return fmt.Errorf("vm is Running, can't destroy a running vm")
 	}
 
 	if ok, _ := domain.IsActive(); ok {
@@ -109,7 +109,11 @@ func KillVM(UUID string, signal string) error {
 	if state == libvirt.DOMAIN_SHUTOFF || state == libvirt.DOMAIN_SHUTDOWN {
 		return fmt.Errorf("vm is not running")
 	}
-	return domain.Destroy()
+	if err := domain.Destroy(); err != nil {
+		logger.WithError(err).Error("failed destroy vm")
+		return err
+	}
+	return nil
 }
 
 func prestartHookVM(containerID string) error {

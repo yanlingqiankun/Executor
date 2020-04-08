@@ -95,11 +95,11 @@ func (m *Base) Start() error {
 	}
 }
 
-func (m *Base) Kill(string) error {
+func (m *Base) Kill(signal string) error {
 	if m.IsDocker {
-		return KillContainer(m.ID, "SIGKILL")
+		return KillContainer(m.ID, signal)
 	} else {
-		return StartVM(m.ID)
+		return KillVM(m.ID, signal)
 	}
 }
 

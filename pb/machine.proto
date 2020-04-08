@@ -50,3 +50,12 @@ message MachineInfo {
 message StartMachineReq {
     string id = 1;
 }
+
+message MachineIdReq {
+    string id = 1;
+}
+
+message KillMachineReq {
+    string id = 1;
+    string signal = 2;
+}

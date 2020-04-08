@@ -239,3 +239,27 @@ func startMachine(id string) error {
 	}
 	return m.Start()
 }
+
+func (s server) KillMachine(ctx context.Context,req *pb.KillMachineReq) (*pb.Error, error) {
+	err := killMachine(req.Id, req.Signal)
+	if err != nil {
+		return newErr(1, err), err
+	} else {
+		return newErr(0, err), nil
+	}
+}
+
+func killMachine(id string, signal string) error {
+	m, err := machine.GetMachine(id)
+	if err != nil {
+		logger.WithError(err).Error("failed to get get machine")
+		return err
+	}
+	err = m.Kill(signal)
+	if err != nil {
+		logger.WithError(err).Error("failed to kill machine")
+		return err
+	}
+	logger.Debugf("%s has been kill", id)
+	return nil
+}
