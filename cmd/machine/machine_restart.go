@@ -12,10 +12,9 @@ import (
 var restartTimeOut = 0
 
 func GetMachineRestartCmd() *cobra.Command {
-
 	machineRestartCmd := &cobra.Command{
 		Use:   "restart id",
-		Short: "Restart one container",
+		Short: "Restart the machine",
 		Args:  cobra.MinimumNArgs(1),
 		Run:   machineRestartHandle,
 	}
