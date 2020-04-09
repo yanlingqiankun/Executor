@@ -90,3 +90,8 @@ message ResizeTTYReq {
     uint32 width = 3;
 }
 
+message CanAttachJudgeResp {
+    bool tty = 1;
+    string state = 2;
+}
+

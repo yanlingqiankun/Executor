@@ -16,6 +16,8 @@ type Machine interface {
 	GetImageID() string             //
 	Rename(string) error            // rename
 	ResizeTTY(h uint32, w uint32) error
+	GetStdio(string) (chan []byte, chan []byte, chan []byte, error) // stdin, stdout, stderr
+	GetState() string               // get machine state
 }
 
 type Factory interface {

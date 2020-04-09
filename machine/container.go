@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/docker/docker/api/types"
+	"github.com/yanlingqiankun/Executor/machine/io"
 	"time"
 )
 
@@ -134,4 +135,62 @@ func resizeTTY (id string, h, w uint32) error {
 		logger.WithError(err).Error("failed to set container's tty size")
 	}
 	return err
+}
+
+func getContainerStdio (id string, detachKey string, openStdin bool) (chan []byte, chan []byte, chan []byte, error) {
+	stream, err := cli.ContainerAttach(context.Background(), id, types.ContainerAttachOptions{
+		Stream:     true,
+		Stdin:      openStdin,
+		Stdout:     true,
+		Stderr:     true,
+		DetachKeys: detachKey,
+		Logs:       false,
+	})
+	if err != nil {
+		logger.WithError(err).Error("failed to attach a container")
+		return nil, nil, nil, err
+	} else {
+		stdin := make(chan []byte, 16)
+		stdout := make(chan []byte, 16)
+		stderr := make(chan []byte, 16)
+
+		go stdinHandle(&stream, stdin, detachKey)
+		go stdoutHandle(&stream, stdout, stderr)
+
+		return stdin, stdout, stderr, nil
+	}
+}
+
+func stdinHandle (response *types.HijackedResponse, in chan []byte, detachKey string) {
+	defer func(){
+		detacheByte, err := io.ToBytes(detachKey)
+		if err != nil {
+			response.Close()
+			return
+		}
+		response.Conn.Write(detacheByte)
+		response.CloseWrite()
+	}()
+	for data := range in{
+		if _, err := response.Conn.Write(data); err != nil {
+			logger.WithError(err).Error("close attach with error")
+			return
+		}
+	}
+}
+
+func stdoutHandle (response *types.HijackedResponse, out chan []byte, stderr chan []byte) {
+	data := make([]byte, 4096)
+	for {
+		n, err := response.Reader.Read(data)
+		if err != nil {
+			logger.WithError(err).Error("close attache with error")
+			response.Close()
+			close(out)
+			close(stderr)
+			return
+		} else {
+			out <- data[:n]
+		}
+	}
 }

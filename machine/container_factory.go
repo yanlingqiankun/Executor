@@ -138,6 +138,7 @@ func (container *BaseContainer) SetEnv(env []string) {
 
 func (container *BaseContainer) SetTTY(tty bool) {
 	container.ContainerConfig.Tty = tty
+	container.ContainerConfig.OpenStdin = tty
 	container.Base.RuntimeConfig.Tty = tty
 }
 

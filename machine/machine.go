@@ -233,3 +233,26 @@ func (m *Base) ResizeTTY(h uint32, w uint32) error {
 		return nil
 	}
 }
+
+func (m *Base) GetStdio(detachKey string) (chan []byte, chan []byte, chan []byte, error) {
+	if m.IsDocker {
+		return getContainerStdio(m.ID, detachKey,m.RuntimeConfig.Tty)
+	} else {
+		return nil, nil, nil, nil
+	}
+}
+
+func (m *Base) GetState() string {
+	var state string
+	var err error
+	if m.IsDocker{
+		state, err = getContainerState(m.ID)
+	} else {
+		state, err = getVMState(m.ID)
+	}
+	if err != nil {
+		return "unknown"
+	} else {
+		return state
+	}
+}

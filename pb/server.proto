@@ -32,4 +32,5 @@ service Executor {
     rpc AttachMachine (stream AttachStreamIn) returns (stream AttachStreamOut) {}
 
     rpc ResizeMachineTTY (ResizeTTYReq) returns (Error) {}
+    rpc CanAttachJudge (MachineIdReq) returns (CanAttachJudgeResp) {}
 }
