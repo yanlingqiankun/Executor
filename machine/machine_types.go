@@ -15,6 +15,7 @@ type Machine interface {
 	Restart(int32) error              // 重启
 	GetImageID() string             //
 	Rename(string) error            // rename
+	ResizeTTY(h uint32, w uint32) error
 }
 
 type Factory interface {

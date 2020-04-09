@@ -124,3 +124,14 @@ func getContainerState(id string) (string, error) {
 func renameContainer(id string, newName string) error {
 	return cli.ContainerRename(context.Background(), id, newName)
 }
+
+func resizeTTY (id string, h, w uint32) error {
+	err := cli.ContainerResize(context.Background(), id, types.ResizeOptions{
+		Height: uint(h),
+		Width:  uint(w),
+	})
+	if err != nil {
+		logger.WithError(err).Error("failed to set container's tty size")
+	}
+	return err
+}

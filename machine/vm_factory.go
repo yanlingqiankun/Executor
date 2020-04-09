@@ -180,6 +180,7 @@ func (VM *BaseVM) SetEnv(env []string) {
 }
 
 func (VM *BaseVM) SetTTY(tty bool) {
+	VM.BaseInfo.RuntimeConfig.Tty = tty
 	return
 }
 

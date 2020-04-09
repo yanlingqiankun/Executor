@@ -78,6 +78,7 @@ type networkConfig struct {
 }
 
 type RuntimeConfig struct {
+	Tty           bool                       `json:"tty"`
 	Networks     []*Network                  `json:"networks"` // 网络设备配置
 	Routes       []*Route                    `json:"routes"`   // 路由配置
 	Volumes      map[string]*Volume          `json:"volumes"`

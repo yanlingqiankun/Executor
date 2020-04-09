@@ -225,3 +225,11 @@ func (m *Base) Rename(newName string) error {
 	logger.Debugf("rename machine %s to %s", m.ID, m.Name)
 	return nil
 }
+
+func (m *Base) ResizeTTY(h uint32, w uint32) error {
+	if m.IsDocker {
+		return resizeTTY(m.ID, h, w)
+	} else{
+		return nil
+	}
+}

@@ -29,4 +29,7 @@ service Executor {
     rpc StopMachine(StopMachineReq) returns (Error) {}
     rpc RenameMachine(RenameMachineReq) returns (Error) {}
     rpc RestartMachine(RestartMachineReq) returns (Error) {}
+    rpc AttachMachine (stream AttachStreamIn) returns (stream AttachStreamOut) {}
+
+    rpc ResizeMachineTTY (ResizeTTYReq) returns (Error) {}
 }

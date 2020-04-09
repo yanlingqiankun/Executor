@@ -75,3 +75,18 @@ message RestartMachineReq {
     int32 timeout = 2; // 为 kill container 设置的超时时间
 }
 
+message AttachStreamIn {
+    string id = 1;
+    bytes content = 2;
+}
+
+message AttachStreamOut {
+    bytes content = 1;
+}
+
+message ResizeTTYReq {
+    string id = 1;
+    uint32 height = 2;
+    uint32 width = 3;
+}
+

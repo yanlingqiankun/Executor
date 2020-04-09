@@ -138,6 +138,7 @@ func (container *BaseContainer) SetEnv(env []string) {
 
 func (container *BaseContainer) SetTTY(tty bool) {
 	container.ContainerConfig.Tty = tty
+	container.Base.RuntimeConfig.Tty = tty
 }
 
 func (container *BaseContainer) SetExposedPorts(info []proxy.ProxyInfo) {
