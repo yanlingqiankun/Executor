@@ -230,3 +230,64 @@ func renameVM(id string, newName string) error {
 	}
 	return nil
 }
+
+type stdio map[chan []byte] *[2]chan []byte
+var stdios map[string] *stdio
+func getVMStdio(id string) (chan []byte, chan[]byte, chan[] byte, error) {
+	//if _, ok := stdios[id]; ok {
+	//
+	//} else {
+	domain, err := libconn.LookupDomainByUUIDString(id)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	defer domain.Free()
+	stream, err := libconn.NewStream(0)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	err = domain.OpenConsole("", stream, libvirt.DOMAIN_CONSOLE_FORCE)
+	if err != nil {
+		logger.WithError(err).Error("failed to open console")
+		return nil,nil, nil, err
+	}
+	stdin := make(chan []byte, 16)
+	stdout := make(chan []byte, 16)
+	stderr := make(chan []byte, 16)
+
+	go stdinVMHandle(stream, stdin)
+	go stdoutVMHandle(stream, stdout, stderr)
+
+	return stdin, stdout, stderr, nil
+	//}
+}
+
+func stdinVMHandle(stream *libvirt.Stream, in chan []byte) {
+	defer func() {
+		stream.Finish()
+	}()
+	for data := range in {
+		_, err := stream.Send(data)
+		if err != nil {
+			logger.WithError(err).Error("close attach with error")
+			return
+		}
+	}
+}
+
+func stdoutVMHandle(stream *libvirt.Stream, out chan []byte, stderr chan []byte) {
+	for {
+		data := make([]byte, 4096)
+		n, err := stream.Recv(data)
+		if err != nil {
+			logger.WithError(err).Error("close attach with error")
+			stream.Finish()
+			stream.Free()
+			close(out)
+			close(stderr)
+			return
+		} else {
+			out <- data[:n]
+		}
+	}
+}

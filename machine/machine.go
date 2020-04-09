@@ -238,7 +238,7 @@ func (m *Base) GetStdio(detachKey string) (chan []byte, chan []byte, chan []byte
 	if m.IsDocker {
 		return getContainerStdio(m.ID, detachKey,m.RuntimeConfig.Tty)
 	} else {
-		return nil, nil, nil, nil
+		return getVMStdio(m.ID)
 	}
 }
 

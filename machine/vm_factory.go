@@ -180,6 +180,39 @@ func (VM *BaseVM) SetEnv(env []string) {
 }
 
 func (VM *BaseVM) SetTTY(tty bool) {
+	if VM.VMConfig.Devices == nil {
+		VM.VMConfig.Devices = &libvirtxml.DomainDeviceList{}
+	}
+
+	var port uint
+	port = 0
+	VM.VMConfig.Devices.Serials = append(make([]libvirtxml.DomainSerial, 0), libvirtxml.DomainSerial{
+		XMLName:  xml.Name{},
+		Source:   nil,
+		Protocol: nil,
+		Target:   &libvirtxml.DomainSerialTarget{
+			Type:  "",
+			Port:  &port,
+			Model: nil,
+		},
+		Log:      nil,
+		Alias:    nil,
+		Address:  nil,
+	})
+
+	VM.VMConfig.Devices.Consoles = append(make([]libvirtxml.DomainConsole, 0), libvirtxml.DomainConsole{
+		XMLName:  xml.Name{},
+		TTY:      "pty",
+		Source:   nil,
+		Protocol: nil,
+		Target:   &libvirtxml.DomainConsoleTarget{
+			Type: "serial",
+			Port: &port,
+		},
+		Log:      nil,
+		Alias:    nil,
+		Address:  nil,
+	})
 	VM.BaseInfo.RuntimeConfig.Tty = tty
 	return
 }
@@ -205,7 +238,6 @@ func (VM *BaseVM) GetBase() (*Base, error) {
 	VM.BaseInfo.CreateTime = time.Now()
 	return VM.BaseInfo, nil
 }
-
 
 func (VM *BaseVM) SetNetworks(networks []*Network) {
 	for idx, nw := range networks {

@@ -66,6 +66,7 @@ func attachStdinHandle(content []byte, req pb.Executor_AttachMachineServer, stdi
 
 func attachStdoutHandle(req pb.Executor_AttachMachineServer, stdout chan []byte, exit chan bool) {
 	for buffer := range stdout {
+		//fmt.Print(string(buffer))
 		if err := req.Send(&pb.AttachStreamOut{Content: buffer}); err == nil {
 			continue
 		} else {

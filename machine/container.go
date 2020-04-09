@@ -154,14 +154,14 @@ func getContainerStdio (id string, detachKey string, openStdin bool) (chan []byt
 		stdout := make(chan []byte, 16)
 		stderr := make(chan []byte, 16)
 
-		go stdinHandle(&stream, stdin, detachKey)
-		go stdoutHandle(&stream, stdout, stderr)
+		go stdinContainerHandle(&stream, stdin, detachKey)
+		go stdoutContainerHandle(&stream, stdout, stderr)
 
 		return stdin, stdout, stderr, nil
 	}
 }
 
-func stdinHandle (response *types.HijackedResponse, in chan []byte, detachKey string) {
+func stdinContainerHandle(response *types.HijackedResponse, in chan []byte, detachKey string) {
 	defer func(){
 		detacheByte, err := io.ToBytes(detachKey)
 		if err != nil {
@@ -179,9 +179,9 @@ func stdinHandle (response *types.HijackedResponse, in chan []byte, detachKey st
 	}
 }
 
-func stdoutHandle (response *types.HijackedResponse, out chan []byte, stderr chan []byte) {
-	data := make([]byte, 4096)
+func stdoutContainerHandle(response *types.HijackedResponse, out chan []byte, stderr chan []byte) {
 	for {
+		data := make([]byte, 4096)
 		n, err := response.Reader.Read(data)
 		if err != nil {
 			logger.WithError(err).Error("close attache with error")
