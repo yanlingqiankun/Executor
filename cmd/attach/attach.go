@@ -106,14 +106,14 @@ func GetNetworkOutput(group *sync.WaitGroup, stream pb.Executor_AttachMachineCli
 	}
 }
 //
-func CheckContainerUp(containerID string) (bool, error) {
+func CheckContainerUp(machineID string) (bool, error) {
 	if resp, err := connection.Client.CanAttachJudge(context.Background(), &pb.MachineIdReq{
-		Id: containerID,
+		Id: machineID,
 	}); err != nil {
 		fmt.Println(err)
 		return false, err
 	} else {
-		if resp.Tty && resp.State == "running" {
+		if resp.Tty && resp.State == "running" && resp.ImageType != "iso" {
 			return true, nil
 		}
 		return false, nil

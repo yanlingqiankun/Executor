@@ -86,7 +86,7 @@ func (s server) DeleteImage(ctx context.Context, req *pb.DeleteImageReq) (*pb.De
 				Code:                 1,
 				Message:              err.Error(),
 			},
-		}, err
+		}, nil
 	} else {
 		logger.Debugf("image %s has been deleted", req.Id)
 		return &pb.DeleteImageResp{

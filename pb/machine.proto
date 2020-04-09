@@ -93,5 +93,6 @@ message ResizeTTYReq {
 message CanAttachJudgeResp {
     bool tty = 1;
     string state = 2;
+    string image_type = 3;
 }
 

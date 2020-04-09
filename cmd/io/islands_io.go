@@ -14,6 +14,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 )
 
 type AttachOptions struct {
@@ -127,7 +128,7 @@ func (islands *IslandsIO) setInput() *terminal.State {
 
 func (islands *IslandsIO) MonitorTTY(ctx context.Context, once sync.Once) {
 
-	var setTtySize func(string, [2]int)()
+	var setTtySize func(string, [2]int, int)()
 	if islands.Opts.Container {
 		setTtySize = setContainerTtySize
 	} else {
@@ -142,7 +143,7 @@ func (islands *IslandsIO) MonitorTTY(ctx context.Context, once sync.Once) {
 			return
 		}
 		sizes := [2]int{width, height}
-		setTtySize(islands.Opts.Id, sizes)
+		setTtySize(islands.Opts.Id, sizes, 0)
 	})
 
 	var winChSignalChan = make(chan os.Signal)
@@ -159,12 +160,12 @@ func (islands *IslandsIO) MonitorTTY(ctx context.Context, once sync.Once) {
 				return
 			}
 			sizes := [2]int{width, height}
-			setTtySize(islands.Opts.Id, sizes)
+			setTtySize(islands.Opts.Id, sizes, 1)
 		}
 	}
 }
 
-func setContainerTtySize(id string, sizes [2]int) {
+func setContainerTtySize(id string, sizes [2]int, s int) {
 	if r, err := connection.Client.ResizeMachineTTY(context.Background(), &pb.ResizeTTYReq{
 		Id:     id,
 		Height: uint32(sizes[0]),
@@ -173,12 +174,15 @@ func setContainerTtySize(id string, sizes [2]int) {
 		fmt.Println(err)
 		return
 	} else {
-		if !utils.PrintError(r) {
+		if r.Code != 0 && s == 0 {
+			time.Sleep(1*time.Second)
+			setContainerTtySize(id, sizes, s)
+		} else if utils.PrintError(r) {
 		}
 	}
 }
 
-func setExecTtySize(id string, sizes [2]int) {
+func setExecTtySize(id string, sizes [2]int, s int) {
 	//if r, err := connection.Client.ResizeExecTTY(context.Background(), &pb.ResizeTTYReq{
 	//	Id:     id,
 	//	Height: uint32(sizes[0]),

@@ -82,9 +82,9 @@ func attachStdoutHandle(req pb.Executor_AttachMachineServer, stdout chan []byte,
 func (s server) ResizeMachineTTY(ctx context.Context, req *pb.ResizeTTYReq) (*pb.Error, error) {
 	err := resizeMachineTTY(req.Id, req.Width, req.Height)
 	if err != nil {
-		return newErr(1, err), err
+		return newErr(1, err), nil
 	} else {
-		return newErr(0, err), err
+		return newErr(0, err), nil
 	}
 }
 
@@ -99,19 +99,20 @@ func resizeMachineTTY (id string, w, h uint32) error {
 }
 
 func (s server) CanAttachJudge(ctx context.Context, req *pb.MachineIdReq) (*pb.CanAttachJudgeResp, error) {
-	tty, state := canAttacheJudge(req.Id)
+	tty, state, imageType:= canAttacheJudge(req.Id)
 	return &pb.CanAttachJudgeResp{
 		Tty:                  tty,
 		State:                state,
+		ImageType:            imageType,
 	}, nil
 }
 
-func canAttacheJudge(id string) (bool, string) {
+func canAttacheJudge(id string) (bool, string, string) {
 	m, err := machine.GetMachine(id)
 	if err != nil {
-		return false, ""
+		return false, "", ""
 	} else {
 		state := m.GetState()
-		return m.(*machine.Base).RuntimeConfig.Tty, state
+		return m.(*machine.Base).RuntimeConfig.Tty, state, m.(*machine.Base).ImageType
 	}
 }
