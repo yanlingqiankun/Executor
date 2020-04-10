@@ -1,8 +1,11 @@
 package machine
 
 import (
+	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"github.com/libvirt/libvirt-go"
+	libvirtxml "github.com/libvirt/libvirt-go-xml"
 	"time"
 )
 
@@ -189,7 +192,13 @@ func getVMInfo(id string) ([]byte, error){
 	if err != nil {
 		return nil, err
 	}
-	return []byte(str), err
+	var temp = libvirtxml.Domain{}
+	err = xml.Unmarshal([]byte(str), &temp)
+	if err != nil {
+		return []byte{}, err
+	}
+	data, err := json.Marshal(temp)
+	return data, err
 }
 
 func getVMState(id string) (string, error){

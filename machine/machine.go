@@ -1,9 +1,12 @@
 package machine
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/libvirt/libvirt-go"
+	libvirtxml "github.com/libvirt/libvirt-go-xml"
 	"github.com/yanlingqiankun/Executor/conf"
 	"github.com/yanlingqiankun/Executor/logging"
 	"os"
@@ -256,3 +259,47 @@ func (m *Base) GetState() string {
 		return state
 	}
 }
+
+func (m *Base) Inspect() (name string, runtimeSetting string, spec string, machineType string, err error) {
+	var data []byte
+	var container = types.ContainerJSON{}
+	var vm = libvirtxml.Domain{}
+	if m.IsDocker {
+		data, err = getContainerInfo(m.ID)
+		if err != nil {
+			return
+		}
+		err = json.Unmarshal(data, &container)
+		if err != nil {
+			return
+		}
+		data, err = json.MarshalIndent(container, "", "\t")
+	} else {
+		data, err = getVMInfo(m.ID)
+		if err != nil {
+			return
+		}
+		err = json.Unmarshal(data, &vm)
+		if err != nil {
+			return
+		}
+		data, err = json.MarshalIndent(vm, "", "\t")
+	}
+	if err != nil {
+		return
+	}
+	spec = string(data)
+	data, err = json.MarshalIndent(m.RuntimeConfig, "", "\t")
+	if err != nil {
+		return
+	}
+	runtimeSetting = string(data)
+	name = m.Name
+	if m.IsDocker {
+		machineType = "container"
+	} else {
+		machineType = "vm"
+	}
+	return
+}
+

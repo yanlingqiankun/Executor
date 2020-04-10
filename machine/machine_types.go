@@ -18,6 +18,7 @@ type Machine interface {
 	ResizeTTY(h uint32, w uint32) error
 	GetStdio(string) (chan []byte, chan []byte, chan []byte, error) // stdin, stdout, stderr
 	GetState() string               // get machine state
+	Inspect() (name string, runtimeSetting string, spec string, machineType string, err error)
 }
 
 type Factory interface {

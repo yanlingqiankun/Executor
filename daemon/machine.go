@@ -333,3 +333,27 @@ func restartMachine(id string, timeout int32) error {
 	logger.Debugf("machine %s has restarted", id)
 	return nil
 }
+
+func (s server) InspectMachine(ctx context.Context, req *pb.MachineIdReq) (*pb.InspectMachineResp, error) {
+	return inspectmachine(req.Id)
+}
+
+func inspectmachine(id string) (*pb.InspectMachineResp, error) {
+	m, err := machine.GetMachine(id)
+	if err != nil {
+		logger.WithError(err).Error("failed to get get machine")
+		return nil, err
+	}
+	name, runtimeSetting, spec, machineType, err := m.Inspect()
+	if err != nil {
+		return &pb.InspectMachineResp{}, err
+	} else {
+		return &pb.InspectMachineResp{
+			Name:                 name,
+			Id:                   id,
+			Type:                 machineType,
+			Spec:                 spec,
+			RuntimeConfig:        runtimeSetting,
+		}, nil
+	}
+}

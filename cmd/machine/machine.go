@@ -18,7 +18,7 @@ func GetMachineCmd() *cobra.Command {
 		GetMachineRestartCmd(),
 		GetMachineStartCmd(),
 		GetMachineStopCmd(),
-		//GetContainerInspectCmd(),
+		GetMachineInspectCmd(),
 		GetMachineListCmd(),
 		//GetContainerPauseCmd(),
 		//GetContainerUnpauseCmd(),

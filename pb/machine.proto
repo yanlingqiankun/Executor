@@ -96,3 +96,10 @@ message CanAttachJudgeResp {
     string image_type = 3;
 }
 
+message InspectMachineResp {
+    string name = 1;
+    string id = 2;
+    string type = 3;
+    string spec = 4;
+    string runtime_config = 5;
+}

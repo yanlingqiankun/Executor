@@ -47,5 +47,4 @@ func networkCreateHandle(cmd *cobra.Command, args []string) {
 	if resp != nil {
 		fmt.Printf("The network %s was created success\n")
 	}
-
 }

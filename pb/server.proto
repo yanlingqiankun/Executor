@@ -30,6 +30,7 @@ service Executor {
     rpc RenameMachine(RenameMachineReq) returns (Error) {}
     rpc RestartMachine(RestartMachineReq) returns (Error) {}
     rpc AttachMachine (stream AttachStreamIn) returns (stream AttachStreamOut) {}
+    rpc InspectMachine(MachineIdReq) returns (InspectMachineResp) {}
 
     rpc ResizeMachineTTY (ResizeTTYReq) returns (Error) {}
     rpc CanAttachJudge (MachineIdReq) returns (CanAttachJudgeResp) {}
