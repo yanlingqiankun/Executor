@@ -352,6 +352,7 @@ func ReleaseIP(netname string, VMName string, ipaddr net.IP) error {
 	}
 	libnet, err := libconn.LookupNetworkByName(netname)
 	if err != nil {
+		logger.WithError(err).Errorf("failed to release %s", ipaddr.String())
 		return err
 	}
 	defer libnet.Free()
@@ -359,7 +360,12 @@ func ReleaseIP(netname string, VMName string, ipaddr net.IP) error {
 	if err != nil {
 		return err
 	}
-	return ipAllocator.release(nw.Subnet, &ipaddr)
+	err = ipAllocator.release(nw.Subnet, &ipaddr)
+	if err != nil {
+		logger.WithError(err).Errorf("failed to release %s", ipaddr.String())
+		return err
+	}
+	return nil
 }
 
 func SetRoute() (err error) {

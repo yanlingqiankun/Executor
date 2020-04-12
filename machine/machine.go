@@ -14,6 +14,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const TIME_LAYOUT = "2006-01-02 15:04:05.999999999 -0700 MST"
@@ -165,7 +166,14 @@ func (m *Base) Delete() error {
 	if m.RuntimeConfig.Networks != nil && len(m.RuntimeConfig.Networks) > 0 {
 		for _, interf := range m.RuntimeConfig.Networks {
 			for _, addr := range interf.Address {
-				network.ReleaseIP(interf.Bridge, m.Name, net.ParseIP(addr))
+				tmp := strings.Split(addr, "/")
+				if len(tmp) > 0 {
+					addr = tmp[0]
+				}
+				err := network.ReleaseIP(interf.Bridge, m.Name, net.ParseIP(addr))
+				if err != nil {
+					logger.WithError(err).Errorf("failed to release ", addr)
+				}
 			}
 		}
 	}
