@@ -7,6 +7,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/libvirt/libvirt-go"
 	libvirtxml "github.com/libvirt/libvirt-go-xml"
+	"github.com/vishvananda/netns"
 	"github.com/yanlingqiankun/Executor/conf"
 	"github.com/yanlingqiankun/Executor/logging"
 	"github.com/yanlingqiankun/Executor/network"
@@ -94,7 +95,25 @@ func AddMachine(f Factory) (string, error) {
 
 func (m *Base) Start() error {
 	if m.IsDocker {
-		return StartContainer(m.ID)
+		err := StartContainer(m.ID)
+		if err != nil {
+			return err
+		}
+		nsHandle, err := netns.GetFromDocker(m.ID)
+		if err != nil {
+			return fmt.Errorf("failed to get %s's network namespace for %v", m.ID, err)
+		}
+		// set container network
+		if m.RuntimeConfig.Networks != nil && len(m.RuntimeConfig.Networks) > 0 {
+			for i, interf := range m.RuntimeConfig.Networks {
+				err := interf.connectBridge(nsHandle, i)
+				if err != nil {
+					logger.WithError(err).Errorf("%s failed to connect to %s", interf.Name, interf.Bridge)
+					return err
+				}
+			}
+		}
+		return nil
 	} else {
 		return StartVM(m.ID)
 	}

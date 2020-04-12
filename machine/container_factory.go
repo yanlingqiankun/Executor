@@ -8,6 +8,7 @@ import (
 )
 
 func CreateContainer(imageID string) Factory {
+	dns := []string{"8.8.8.8","8.8.4.4"}
 	container := &BaseContainer{
 		Base: &Base{
 			IsDocker:      true,
@@ -37,7 +38,7 @@ func CreateContainer(imageID string) Factory {
 			Volumes:         nil,
 			WorkingDir:      "",
 			Entrypoint:      nil,
-			NetworkDisabled: true,
+			NetworkDisabled: false,
 			MacAddress:      "",
 			OnBuild:         nil,
 			Labels:          nil,
@@ -45,7 +46,48 @@ func CreateContainer(imageID string) Factory {
 			StopTimeout:     nil,
 			Shell:           nil,
 		},
-		HostConfig: nil,
+		HostConfig: &container.HostConfig{
+			Binds:           nil,
+			ContainerIDFile: "",
+			LogConfig:       container.LogConfig{},
+			NetworkMode:     "none",
+			PortBindings:    nil,
+			RestartPolicy:   container.RestartPolicy{},
+			AutoRemove:      false,
+			VolumeDriver:    "",
+			VolumesFrom:     nil,
+			CapAdd:          nil,
+			CapDrop:         nil,
+			Capabilities:    nil,
+			DNS:             dns,
+			DNSOptions:      nil,
+			DNSSearch:       nil,
+			ExtraHosts:      nil,
+			GroupAdd:        nil,
+			IpcMode:         "",
+			Cgroup:          "",
+			Links:           nil,
+			OomScoreAdj:     0,
+			PidMode:         "",
+			Privileged:      false,
+			PublishAllPorts: false,
+			ReadonlyRootfs:  false,
+			SecurityOpt:     nil,
+			StorageOpt:      nil,
+			Tmpfs:           nil,
+			UTSMode:         "",
+			UsernsMode:      "",
+			ShmSize:         0,
+			Sysctls:         nil,
+			Runtime:         "",
+			ConsoleSize:     [2]uint{},
+			Isolation:       "",
+			Resources:       container.Resources{},
+			Mounts:          nil,
+			MaskedPaths:     nil,
+			ReadonlyPaths:   nil,
+			Init:            nil,
+		},
 	}
 	return container
 }
@@ -151,6 +193,12 @@ func (container *BaseContainer) SetExposedPorts(info []proxy.ProxyInfo) {
 }
 
 func (container *BaseContainer) SetHosts(hosts []string) {
+	if hosts == nil {
+		return
+	}
+	if container.HostConfig.ExtraHosts == nil {
+		container.HostConfig.ExtraHosts = make ([]string, 0)
+	}
 	container.HostConfig.ExtraHosts = hosts
 }
 

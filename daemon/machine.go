@@ -91,7 +91,7 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 					logger.WithError(err).Error("failed to get ip")
 					return "", err
 				}
-				address = append(address, addr.String())
+				address = append(address, fmt.Sprintf("%s/%d", addr.String(), prefix))
 			} else {
 				for index, addr := range i.Address {
 					err := network.RegisterIP(i.Bridge, req.Name, net.ParseIP(addr.Ip), i.Mac)
