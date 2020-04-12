@@ -26,6 +26,7 @@ func (nw *Network) createBridge() error {
 		BridgeName: nw.Driver,
 		IP:         nw.GateWay,
 		Mask:       nw.Subnet.Mask,
+
 	}
 	return bridges[nw.Name].Create(nw.Subnet)
 }
@@ -95,7 +96,9 @@ func createBridgeInterface(bridgeName, ip, mask string) error {
 		Name:                bridgeName,
 		UUID:                "",
 		Metadata:            nil,
-		Forward:             nil,
+		Forward:             &libvirtxml.NetworkForward{
+			Mode:       "nat",
+		},
 		Bridge:              &libvirtxml.NetworkBridge{
 			Name:            bridgeName,
 			STP:             "on",
@@ -103,6 +106,14 @@ func createBridgeInterface(bridgeName, ip, mask string) error {
 			MACTableManager: "",
 			Zone:            "",
 		},
+		//Routes: append(make([]libvirtxml.NetworkRoute,0), libvirtxml.NetworkRoute{
+		//	Family:  "ipv4",
+		//	Address: "0.0.0.0",
+		//	Netmask: "",
+		//	Prefix:  0,
+		//	Gateway: ip,
+		//	Metric:  "",
+		//}),
 	}
 	
 	netXML.IPs = make([]libvirtxml.NetworkIP, 1)

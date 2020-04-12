@@ -80,6 +80,11 @@ func (VM *BaseVM) Create() error {
 	}
 	id := util.UUIDTOID(VM.VMConfig.UUID)
 	VM.BaseInfo.ID = id
+	//if VM.BaseInfo.RuntimeConfig.Networks != nil {
+	//	for _ ,net := range VM.BaseInfo.RuntimeConfig.Networks {
+	//		network.Restart(net.Bridge)
+	//	}
+	//}
 	logger.Debugf("The VM %s created successfully", id)
 	return nil
 }
@@ -242,13 +247,59 @@ func (VM *BaseVM) GetBase() (*Base, error) {
 func (VM *BaseVM) SetNetworks(networks []*Network) {
 	for idx, nw := range networks {
 		if nw.Name == "" {
-			nw.Name = "eth" + strconv.Itoa(idx)
+			nw.Name = "eth" + stringid.GenerateRandomID()[:5] + strconv.Itoa(idx)
 		}
 
-		if nw.HostInterfaceName == "" {
-			nw.HostInterfaceName = "veth" + stringid.GenerateRandomID()[:6] + strconv.Itoa(idx)
-		}
+		VM.VMConfig.Devices.Interfaces = append(VM.VMConfig.Devices.Interfaces, libvirtxml.DomainInterface{
+			XMLName:             xml.Name{},
+			Managed:             "",
+			TrustGuestRXFilters: "",
+			MAC:                 &libvirtxml.DomainInterfaceMAC{Address:nw.MacAddress},
+			Source:              &libvirtxml.DomainInterfaceSource{
+				Network:   &libvirtxml.DomainInterfaceSourceNetwork{
+					Network:   nw.Bridge,
+				},
+			},
+			Route:               nil,
+			Target:              &libvirtxml.DomainInterfaceTarget{
+				Dev:     nw.Name,
+			},
+		})
+		//for i, address := range nw.Address{
+		//	var temp []string
+		//	temp = strings.Split(address,"/")
+		//	if len(temp) == 1 {
+		//		temp = append(temp, "24")
+		//	}
+		//	//pre, err := strconv.Atoi(temp[1])
+		//	//if err != nil {
+		//	//	logger.WithError(err).Error("failed to get ip prefix of ", temp[1])
+		//	//	pre = 24
+		//	//}
+		//	//prefix := uint(pre)
+		//	//VM.VMConfig.Devices.Interfaces[idx].IP = append(VM.VMConfig.Devices.Interfaces[idx].IP, libvirtxml.DomainInterfaceIP{
+		//	//	Address: temp[0],
+		//	//	Family:  "",
+		//	//	Prefix:  prefix,
+		//	//	Peer:    "",
+		//	//})
+		//
+		//	if i == 0 {
+		//		// todo set route
+		//	}
+		//}
 
+		//if idx == 0 {
+		//	// default route
+		//	VM.VMConfig.Devices.Interfaces[0].Route = append(VM.VMConfig.Devices.Interfaces[0].Route, libvirtxml.DomainInterfaceRoute{
+		//		Family:  "ipv4",
+		//		Address: "0.0.0.0",
+		//		Netmask: "",
+		//		Prefix:  0,
+		//		Gateway: nw.Gateway,
+		//		Metric:  0,
+		//	})
+		//}
 	}
 	VM.BaseInfo.RuntimeConfig.Networks = networks
 }

@@ -240,8 +240,6 @@ func renameVM(id string, newName string) error {
 	return nil
 }
 
-type stdio map[chan []byte] *[2]chan []byte
-var stdios map[string] *stdio
 func getVMStdio(id string) (chan []byte, chan[]byte, chan[] byte, error) {
 	//if _, ok := stdios[id]; ok {
 	//

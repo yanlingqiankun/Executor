@@ -39,7 +39,7 @@ func init() {
 	ipAllocator.SubnetAllocatorPath = filepath.Join(networkPath, "IPAM")
 	libconn, err = libvirt.NewConnect("qemu:///system")
 	if err != nil {
-		logger.Fatalf("failed to connect to qemu")
+		logger.Fatalf("failed to connect to xen")
 	}
 	if err = Init(); err != nil {
 		logger.Fatal("failed to init network : ", err.Error())
@@ -148,6 +148,9 @@ func CreateNetwork(name, subnet, gateway string) error {
 		return fmt.Errorf("Can't get the subnet")
 	}
 	var gatewayIP net.IP
+	if err := ipAllocator.createPool(cidr); err != nil{
+		return err
+	}
 	if gateway == "" {
 		tmp, err := ipAllocator.allocate(cidr)
 		if err != nil {
@@ -179,6 +182,9 @@ func CreateNetwork(name, subnet, gateway string) error {
 	if link, _ := netlink.LinkByName(nw.Driver); link != nil {
 		return fmt.Errorf("Warning", nw.Name, " exists")
 	}
+	if err := ipAllocator.register(cidr, gatewayIP); err != nil {
+		return err
+	}
 	return nw.createBridge()
 }
 
@@ -201,7 +207,7 @@ func DeleteNetwork(networkName string, force bool) error {
 		return fmt.Errorf("No Such Network: %s", networkName)
 	}
 	if !force {
-		if ipAllocator.getCounter(nw.Subnet.String()) > 1 {
+		if ipAllocator.getCounter(nw.Subnet.String()) > 3 {
 			return fmt.Errorf("can remove a network in use, please use -f to forcely remove it")
 		}
 	}
@@ -270,32 +276,45 @@ func GetNetworkInfo(netname string) *NetworkInfo {
 	}
 }
 
-func AllocateIP(netname string) (net.IP, error) {
+func AllocateIP(netname string, VMName string, mac string) (net.IP, error) {
 	nw, ok := networks[netname]
 	if !ok {
 		return nil, fmt.Errorf("The network is not exists")
 	}
-	return ipAllocator.allocate(nw.Subnet)
+	ip, err := ipAllocator.allocate(nw.Subnet)
+	ipAllocator.allocate(nw.Subnet)
+	if err != nil {
+		return nil, err
+	} else {
+		err := RegisterIP(netname, VMName, ip, mac)
+		return ip, err
+	}
 }
 
-func RegisterIP(netname string, VMName string, ipaddr net.IP) error {
+func RegisterIP(netname string, VMName string, ipaddr net.IP, mac string) error {
 	//check if the ip valid
 	nw, ok := networks[netname]
 	if !ok {
 		return fmt.Errorf("The network is not exists")
 	}
+
 	if !nw.Subnet.Contains(ipaddr) {
 		return fmt.Errorf("The IP is invalid")
 	}
 
+	err := ipAllocator.register(nw.Subnet, ipaddr)
+	if err != nil {
+		return err
+	}
 	libnet, err := libconn.LookupNetworkByName(netname)
 	if err != nil {
 		return err
 	}
+	defer libnet.Free()
 	libhost := libvirtxml.NetworkDHCPHost{
 		XMLName: xml.Name{},
-		ID:      util.GetBytesSha256([]byte(VMName)),
-		MAC:     "",
+		ID:      util.GetBytesSha256([]byte(VMName + ipaddr.String())),
+		MAC:     mac,
 		Name:    VMName,
 		IP:      ipaddr.String(),
 	}
@@ -303,11 +322,12 @@ func RegisterIP(netname string, VMName string, ipaddr net.IP) error {
 	if err != nil {
 		return err
 	}
-	err = libnet.Update(libvirt.NETWORK_UPDATE_COMMAND_ADD_FIRST,libvirt.NETWORK_SECTION_IP_DHCP_HOST, -1,hostStr,libvirt.NETWORK_UPDATE_AFFECT_LIVE | libvirt.NETWORK_UPDATE_AFFECT_CONFIG)
+	err = libnet.Update(libvirt.NETWORK_UPDATE_COMMAND_ADD_FIRST,libvirt.NETWORK_SECTION_IP_DHCP_HOST, -1,hostStr, libvirt.NETWORK_UPDATE_AFFECT_CONFIG | libvirt.NETWORK_UPDATE_AFFECT_LIVE)
 	if err != nil {
+		logger.WithError(err).Error("failed to register ip ", ipaddr.String())
 		return err
 	}
-	return ipAllocator.register(nw.Subnet, ipaddr)
+	return nil
 }
 
 func ReleaseIP(netname string, VMName string, ipaddr net.IP) error {
@@ -321,7 +341,7 @@ func ReleaseIP(netname string, VMName string, ipaddr net.IP) error {
 	}
 	libhost := libvirtxml.NetworkDHCPHost{
 		XMLName: xml.Name{},
-		ID:      util.GetBytesSha256([]byte(VMName)),
+		ID:      util.GetBytesSha256([]byte(VMName+ipaddr.String())),
 		MAC:     "",
 		Name:    VMName,
 		IP:      ipaddr.String(),
@@ -346,3 +366,37 @@ func SetRoute() (err error) {
 	panic("set route")
 	return
 }
+
+func GetPrefix(netname string) (int, error) {
+	nw, ok := networks[netname]
+	if !ok {
+		return 0,fmt.Errorf("The network is not exists")
+	}
+	prefix, _ := nw.Subnet.Mask.Size()
+	return prefix, nil
+}
+
+func GetGateWay(netname string) (string, error) {
+	nw, ok := networks[netname]
+	if !ok {
+		return "",fmt.Errorf("The network is not exists")
+	}
+	return nw.GateWay.String(), nil
+}
+
+//func Restart(netname string) error {
+//	_, ok := networks[netname]
+//	if !ok {
+//		return fmt.Errorf("The network is not exists")
+//	}
+//
+//	libnet, err := libconn.LookupNetworkByName(netname)
+//	if err != nil {
+//		return err
+//	}
+//	defer libnet.Free()
+//	if ok, _ := libnet.IsActive(); ok {
+//		libnet.Destroy()
+//	}
+//	return libnet.Create()
+//}

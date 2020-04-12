@@ -9,6 +9,8 @@ import (
 	libvirtxml "github.com/libvirt/libvirt-go-xml"
 	"github.com/yanlingqiankun/Executor/conf"
 	"github.com/yanlingqiankun/Executor/logging"
+	"github.com/yanlingqiankun/Executor/network"
+	"net"
 	"os"
 	"path/filepath"
 )
@@ -32,7 +34,7 @@ func init() {
 	}
 	libconn, err = libvirt.NewConnect("qemu:///system")
 	if err != nil {
-		logger.Fatalf("failed to connect to qemu")
+		logger.Fatalf("failed to connect to xen")
 	}
 	db.init()
 }
@@ -139,6 +141,16 @@ func (m *Base) Delete() error {
 			}
 		}
 	}
+
+	// release ip
+	if m.RuntimeConfig.Networks != nil && len(m.RuntimeConfig.Networks) > 0 {
+		for _, interf := range m.RuntimeConfig.Networks {
+			for _, addr := range interf.Address {
+				network.ReleaseIP(interf.Bridge, m.Name, net.ParseIP(addr))
+			}
+		}
+	}
+
 	db.Delete(m.ID)
 	db.save(false, "")
 	logger.Debugf("%s has removed sussessfully", m.ID)

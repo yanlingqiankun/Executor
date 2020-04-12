@@ -42,3 +42,13 @@ func PathExist(path string) bool {
 		return true
 	}
 }
+//
+//func GetSubnetFromIP(ip string, prefix int) (string, error) {
+//	i := prefix
+//	ipByte := net.ParseIP(ip)
+//	if ipByte == nil {
+//		return "", fmt.Errorf("invalid ip")
+//	} else {
+//		for data := ipByte
+//	}
+//}

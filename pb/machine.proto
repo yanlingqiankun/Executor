@@ -12,6 +12,7 @@ message CreateMachineReq {
     repeated string cmd = 5;
     string working_dir = 6;
     map<string, PortBindings> exposed_ports = 7; // 端口映射
+    Network network = 8;
 }
 
 message PortBinding {
@@ -102,4 +103,30 @@ message InspectMachineResp {
     string type = 3;
     string spec = 4;
     string runtime_config = 5;
+}
+
+message Network {
+    string hostname = 1;                        // 主机名
+    repeated HostEntry extra_hosts = 2;         // 额外的hosts
+    // 额外的网络接口，无接口时则只有本地环回设备
+    // 存在多个接口时则默认使用第一个接口作为网络默认出口
+    repeated NetworkInterface interfaces = 3;
+}
+
+message HostEntry {
+    string ip = 1;
+    string host = 2;
+}
+
+message NetworkInterface {
+    string name = 1;                        // 容器内veth的名字
+    string bridge = 2;                      // 该veth需要接入的网桥名
+    string mac = 3;                         // mac地址，可以为空
+    string gateway = 4;                     // 网关ip
+    repeated NetworkAddress address = 5;    // ipv4地址，
+}
+
+message NetworkAddress {
+    string ip = 1;
+    int32 mask = 2;
 }

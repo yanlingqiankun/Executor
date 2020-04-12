@@ -16,6 +16,10 @@ type ContainerVolume struct {
 	Type        string `json:"type"`
 }
 
+type HostEntry struct {
+	Host    string
+	Address string
+}
 
 type Network struct {
 	// Type 设置 networks type, 通常设置为 veth 或者 loopback

@@ -6,9 +6,11 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/yanlingqiankun/Executor/image"
 	"github.com/yanlingqiankun/Executor/machine"
+	"github.com/yanlingqiankun/Executor/network"
 	"github.com/yanlingqiankun/Executor/network/proxy"
 	"github.com/yanlingqiankun/Executor/pb"
 	"github.com/yanlingqiankun/Executor/stringid"
+	"net"
 	"strings"
 )
 
@@ -46,7 +48,7 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 	}
 
 	if req.Name == ""{
-		req.Name = stringid.GenerateRandomID()[:12]
+		req.Name = "m"+ stringid.GenerateRandomID()[:11]
 	}
 	if err := factory.SetName(req.Name); err != nil {
 		return "", err
@@ -66,28 +68,50 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 	//	CgroupsPath:    req.Resources.CgroupParent,
 	//	LinuxResources: resources,
 	//})
+	if req.Network != nil {
+		factory.SetHostname(req.Network.Hostname)
+		factory.SetHosts(convertHostsFromPB(req.Network.ExtraHosts))
+		machineInterface := make([]*machine.Network, len(req.Network.Interfaces))
+		for index, i := range req.Network.Interfaces {
+			prefix, err := network.GetPrefix(i.Bridge)
+			if err != nil {
+				return "", err
+			}
+			gateWay, err := network.GetGateWay(i.Bridge)
+			if err != nil {
+				return "", err
+			}
+			address := make([]string, len(i.Address))
+			if i.Mac == "" {
+				i.Mac = getMac()
+			}
+			if len(address) == 0 {
+				addr, err := network.AllocateIP(i.Bridge, req.Name, i.Mac)
+				if err != nil {
+					logger.WithError(err).Error("failed to get ip")
+					return "", err
+				}
+				address = append(address, addr.String())
+			} else {
+				for index, addr := range i.Address {
+					err := network.RegisterIP(i.Bridge, req.Name, net.ParseIP(addr.Ip), i.Mac)
+					if err != nil {
+						return "", err
+					}
+					address[index] = fmt.Sprintf("%s/%d", addr.Ip, prefix)
+				}
+			}
 
-	//if req.Network != nil {
-	//	factory.SetHostname(req.Network.Hostname)
-	//	factory.SetHosts(convertHostsFromPB(req.Network.ExtraHosts))
-	//	factory.SetDNS(req.Network.Dns)
-	//
-	//	containerInterface := make([]*island.Network, len(req.Network.Interfaces))
-	//	for index, i := range req.Network.Interfaces {
-	//		address := make([]string, len(i.Address))
-	//		for index, addr := range i.Address {
-	//			address[index] = fmt.Sprintf("%s/%d", addr.Ip, addr.Mask)
-	//		}
-	//		containerInterface[index] = &island.Network{
-	//			Name:       i.Name,
-	//			Bridge:     i.Bridge,
-	//			MacAddress: i.Mac,
-	//			Address:    address,
-	//			Gateway:    i.Gateway,
-	//		}
-	//	}
-	//	factory.SetNetworks(containerInterface)
-	//}
+			machineInterface[index] = &machine.Network{
+				Name:       i.Name,
+				Bridge:     i.Bridge,
+				MacAddress: i.Mac,
+				Address:    address,
+				Gateway:    gateWay,
+			}
+		}
+		factory.SetNetworks(machineInterface)
+	}
 
 	//if req.Volumes != nil {
 	//	volumes := make([]*island.ContainerVolume, len(req.Volumes))

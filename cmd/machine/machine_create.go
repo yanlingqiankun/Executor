@@ -23,7 +23,7 @@ var (
 	dns             []string
 	gateway         string
 	mac             string
-	bridge          string
+	network         string
 	cidr            string
 	name            string
 	ipAddr          string
@@ -46,7 +46,7 @@ func GetMachineCreateCmd() *cobra.Command {
 	machineCreateCmd.Flags().StringSliceVar(&extraHostsValue, "add-host", []string{}, "Add a custom host-to-IP mapping (host:ip)")
 	machineCreateCmd.Flags().StringSliceVar(&dns, "dns", []string{}, "Set custom DNS servers")
 	machineCreateCmd.Flags().StringVar(&mac, "mac", "", "set mac for your container")
-	machineCreateCmd.Flags().StringVar(&bridge, "network", "", "set network for your machine")
+	machineCreateCmd.Flags().StringVar(&network, "network", "", "set network for your machine")
 	machineCreateCmd.Flags().StringVar(&ipAddr, "ip", "", "set ip and mask for your machine")
 	machineCreateCmd.Flags().StringVar(&name, "name", "", "Assign a name to the machine")
 
@@ -64,40 +64,10 @@ func machineCreateHandle(cmd *cobra.Command, args []string) {
 	//volumes := MountHandle(mountInfo)
 
 	//ExtraHost
-	//extraHostsParam := ExtraHostDeal(extraHostsValue)
-
-	//get network info
-	//networkInfo := network.GetNetworkInfo(bridge)
-	//if networkInfo != nil {
-	//	cidr = networkInfo.Config.Subnet
-	//	gateway = networkInfo.Config.Gateway
-	//	bridge = networkInfo.Driver
-	//	if ipAddr == "" {
-	//		ip, err := network.AllocateIP(bridge)
-	//		if err != nil {
-	//			fmt.Println("ip allocate failed")
-	//			return
-	//		}
-	//
-	//		if err := network.RegisterIP(bridge, ip); err != nil {
-	//			fmt.Println("ip register failed")
-	//			return
-	//		}
-	//
-	//		defer func() {
-	//			if err := network.ReleaseIP(bridge, ip); err != nil {
-	//				fmt.Println("ip release failed")
-	//			}
-	//		}()
-	//
-	//		ipAddr = ip.String()
-	//	}
-	//}
+	extraHostsParam := ExtraHostDeal(extraHostsValue)
 
 	//cidr
-	//networkAddress := []*pb.NetworkAddress{}
-	//mask := 0
-	//
+
 	//if cidr != "" {
 	//	reg, err := regexp.Compile(`([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/([0-9]{0,2})`)
 	//	if err != nil {
@@ -119,25 +89,25 @@ func machineCreateHandle(cmd *cobra.Command, args []string) {
 	//		Mask: int32(mask),
 	//	})
 	//}
-	//
-	//// interface
-	//var interfaceSlice []*pb.NetworkInterface
-	//
-	////network interfaces
-	//if !(bridge == "" || gateway == "" || len(networkAddress) == 0) {
-	//	networkInterfaces := pb.NetworkInterface{
-	//		Name:    "",
-	//		Bridge:  bridge,
-	//		Mac:     mac,
-	//		Gateway: gateway,
-	//		Address: networkAddress,
-	//	}
-	//	interfaceSlice = append(interfaceSlice, &networkInterfaces)
-	//} else if (bridge == "" || gateway == "" || len(networkAddress) == 0) && !(bridge == "" && gateway == "" && len(networkAddress) == 0) {
-	//	PrintmachineNetworkError()
-	//	return
-	//} else {
-	//}
+
+	// interface
+	var interfaceSlice []*pb.NetworkInterface
+
+	if network != "" {
+		interfaceSlice = append(interfaceSlice, &pb.NetworkInterface{
+			Name:                 "",
+			Bridge:               network,
+			Mac:                  "",
+			Gateway:              "",
+		})
+	}
+
+	if ipAddr != "" && network != "" {
+		interfaceSlice[0].Address = append(interfaceSlice[0].Address, &pb.NetworkAddress{
+			Ip:                   ipAddr,
+			Mask:                 -1,
+		})
+	}
 
 	// 设置环境变量
 	defaultEnv := []string{}
@@ -154,12 +124,11 @@ func machineCreateHandle(cmd *cobra.Command, args []string) {
 	r, err := connection.Client.CreateMachine(context.Background(), &pb.CreateMachineReq{
 		ImageId: imageId,
 		Name:    name,
-		//Network: &pb.Network{
-		//	Hostname:   hostname,
-		//	ExtraHosts: extraHostsParam,
-		//	Dns:        dns,
-		//	Interfaces: interfaceSlice,
-		//},
+		Network: &pb.Network{
+			Hostname:   hostname,
+			ExtraHosts: extraHostsParam,
+			Interfaces: interfaceSlice,
+		},
 		Env: env,
 		//Volumes:    volumes,
 		//StopSignal: stopSignal,
@@ -254,22 +223,22 @@ func CheckNameOrId(machineId string) string {
 //	return
 //}
 
-//func ExtraHostDeal(extraHosts []string) []*pb.HostEntry {
-//	var extra []*pb.HostEntry
-//
-//	for _, val := range extraHosts {
-//		hostsList := strings.Split(val, ":")
-//		if len(hostsList) < 2 {
-//			panic("wrong format of the extra hosts")
-//		}
-//
-//		extra = append(extra, &pb.HostEntry{
-//			Ip:   hostsList[1],
-//			Host: hostsList[0],
-//		})
-//	}
-//	return extra
-//}
+func ExtraHostDeal(extraHosts []string) []*pb.HostEntry {
+	var extra []*pb.HostEntry
+
+	for _, val := range extraHosts {
+		hostsList := strings.Split(val, ":")
+		if len(hostsList) < 2 {
+			panic("wrong format of the extra hosts")
+		}
+
+		extra = append(extra, &pb.HostEntry{
+			Ip:   hostsList[1],
+			Host: hostsList[0],
+		})
+	}
+	return extra
+}
 
 func PrintmachineNetworkError() {
 	fmt.Println("islands: please check bridge, gateway and network address, you may lost one of them.")
