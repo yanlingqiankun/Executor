@@ -1,9 +1,11 @@
 package machine
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/libvirt/libvirt-go"
 	libvirtxml "github.com/libvirt/libvirt-go-xml"
@@ -11,10 +13,12 @@ import (
 	"github.com/yanlingqiankun/Executor/conf"
 	"github.com/yanlingqiankun/Executor/logging"
 	"github.com/yanlingqiankun/Executor/network"
+	"github.com/yanlingqiankun/Executor/network/proxy"
 	"net"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 const TIME_LAYOUT = "2006-01-02 15:04:05.999999999 -0700 MST"
@@ -114,9 +118,70 @@ func (m *Base) Start() error {
 				}
 			}
 		}
-		return nil
 	} else {
-		return StartVM(m.ID)
+		err := StartVM(m.ID)
+		if err != nil {
+			return err
+		}
+	}
+	m.prestartHook()
+	return nil
+}
+
+func (m *Base) prestartHook() {
+	logger.Debugf("%s prestart hook ", m.ID)
+	if len(m.RuntimeConfig.Networks) > 0 && len(m.RuntimeConfig.ExposedPorts) > 0 {
+		dstIP := strings.Split(m.RuntimeConfig.Networks[0].Address[0], "/")[0]
+		m.RuntimeConfig.ProxyManager = proxy.GetProxyManager()
+		for _, exposedPort := range m.RuntimeConfig.ExposedPorts {
+			m.RuntimeConfig.ProxyManager.Add(exposedPort.Src, dstIP+":"+exposedPort.DstPort, exposedPort.Protocol)
+		}
+		errs := m.RuntimeConfig.ProxyManager.StartAll()
+		if len(errs) > 0 {
+			for _, err := range errs {
+				logger.WithError(err).Error("failed to start proxy")
+			}
+		}
+	}
+	go m.monitor()
+}
+
+func (m *Base) monitor() {
+	defer m.poststopHook()
+	if m.IsDocker {
+		okC, errC := cli.ContainerWait(context.Background(), m.ID, container.WaitConditionNextExit)
+		select {
+		case <-okC:
+			logger.Debugf("%s container exit", m.ID)
+		case err := <-errC:
+			logger.WithError(err).Errorf("%s container exit with error", m.ID)
+		}
+	} else {
+		for {
+			time.Sleep(1 * time.Second)
+			state, err := getVMState(m.ID)
+			if err != nil {
+				logger.WithError(err).Errorf("the vm id is %s maybe exit", m.ID)
+				break
+			} else {
+				if state == "shutdown" || state == "shutoff" || state == "crashed" {
+					logger.Debugf("the vm id is %s exit with state %s", m.ID, state)
+					break
+				}
+			}
+		}
+	}
+}
+
+func (m *Base) poststopHook() {
+	logger.Debugf("%s poststop hook ", m.ID)
+	if m.RuntimeConfig.ProxyManager != nil {
+		errs := m.RuntimeConfig.ProxyManager.StopAll()
+		if len(errs) > 0 {
+			for _, err := range errs {
+				logger.WithError(err).Error("failed to stop proxy")
+			}
+		}
 	}
 }
 

@@ -24,9 +24,9 @@ var (
 	gateway         string
 	mac             string
 	network         string
-	cidr            string
 	name            string
 	ipAddr          string
+	exposedPorts    []string
 )
 
 func GetMachineCreateCmd() *cobra.Command {
@@ -49,6 +49,7 @@ func GetMachineCreateCmd() *cobra.Command {
 	machineCreateCmd.Flags().StringVar(&network, "network", "", "set network for your machine")
 	machineCreateCmd.Flags().StringVar(&ipAddr, "ip", "", "set ip and mask for your machine")
 	machineCreateCmd.Flags().StringVar(&name, "name", "", "Assign a name to the machine")
+	machineCreateCmd.Flags().StringArrayVar(&exposedPorts, "exposed-ports", nil, "Publish a machine's port(s) to the host")
 
 	return machineCreateCmd
 }
@@ -121,6 +122,13 @@ func machineCreateHandle(cmd *cobra.Command, args []string) {
 		command = args[1:]
 	}
 
+	//ExposedPorts
+	err, exposedPortsStruct := ExposedPortsHandle(exposedPorts)
+	if err != nil {
+		fmt.Printf("Cannot create the container for reason %v\n", err)
+		return
+	}
+
 	r, err := connection.Client.CreateMachine(context.Background(), &pb.CreateMachineReq{
 		ImageId: imageId,
 		Name:    name,
@@ -134,6 +142,7 @@ func machineCreateHandle(cmd *cobra.Command, args []string) {
 		//StopSignal: stopSignal,
 		Tty:        tty,
 		Cmd:        command,
+		ExposedPorts:exposedPortsStruct,
 	})
 	if err != nil {
 		fmt.Printf("Cannot create the machine for reason %v\n", err)
