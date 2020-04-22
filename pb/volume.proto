@@ -1,0 +1,38 @@
+syntax = "proto3";
+package pb;
+
+import "pb/common.proto";
+
+message Volume {
+    string name = 1;
+    string path = 2;
+    string create_time = 3;
+}
+
+message ListVolumeResp {
+    repeated Volume volumes = 1;
+    Error error = 2;
+}
+
+message CreateVolumeReq {
+    string name = 1;            // 卷名称，为空时使用卷id作为名称
+}
+
+message CreateVolumeResp {
+    Volume volume = 1;
+    Error error = 2;
+}
+
+message AddVolumeReq {
+    string path = 1;            // 要添加为卷的的目录
+    string name = 2;            // 卷名称，为空时使用卷id作为名称
+}
+
+message AddVolumeResp {
+    string volume = 1;
+    Error error = 2;
+}
+
+message DeleteVolumeReq {
+    string name = 1;
+}

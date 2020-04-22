@@ -6,6 +6,7 @@ import "pb/network.proto";
 import "pb/image.proto";
 import "pb/machine.proto";
 import "pb/common.proto";
+import "pb/volume.proto";
 import "google/protobuf/empty.proto";
 
 service Executor {
@@ -34,4 +35,10 @@ service Executor {
 
     rpc ResizeMachineTTY (ResizeTTYReq) returns (Error) {}
     rpc CanAttachJudge (MachineIdReq) returns (CanAttachJudgeResp) {}
+
+    // volume
+    rpc ListVolume (google.protobuf.Empty) returns (ListVolumeResp) {}
+    rpc CreateVolume(CreateVolumeReq) returns (CreateVolumeResp) {}                 // 创建一个卷
+    rpc AddVolume (AddVolumeReq) returns (AddVolumeResp) {}                         // 将已有的目录添加为卷
+    rpc DeleteVolume (DeleteVolumeReq) returns (Error) {}
 }

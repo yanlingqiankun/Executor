@@ -7,6 +7,7 @@ import (
 	"github.com/yanlingqiankun/Executor/cmd/image"
 	"github.com/yanlingqiankun/Executor/cmd/machine"
 	"github.com/yanlingqiankun/Executor/cmd/network"
+	"github.com/yanlingqiankun/Executor/cmd/volume"
 	"os"
 )
 
@@ -37,6 +38,7 @@ func main() {
 		image.GetImageCmd(),
 		machine.GetMachineCmd(),
 		attach.GetAttachCmd(),
+		volume.GetVolumeCmd(),
 	)
 	_ = rootCmd.Execute()
 }
