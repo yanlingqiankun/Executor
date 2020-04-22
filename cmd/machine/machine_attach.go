@@ -1,4 +1,4 @@
-package attach
+package machine
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/yanlingqiankun/Executor/cmd/connection"
 	"github.com/yanlingqiankun/Executor/cmd/io"
-	"github.com/yanlingqiankun/Executor/cmd/machine"
 	"github.com/yanlingqiankun/Executor/cmd/streams"
 	"github.com/yanlingqiankun/Executor/pb"
 	"os"
@@ -39,7 +38,7 @@ func GetAttachCmd() *cobra.Command {
 
 func attachHandle(cmd *cobra.Command, args []string) {
 
-	id := machine.CheckNameOrId(args[0])
+	id := CheckNameOrId(args[0])
 	up, err := CheckContainerUp(id)
 	if err != nil {
 		fmt.Println(err)

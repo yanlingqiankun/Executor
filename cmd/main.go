@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/yanlingqiankun/Executor/cmd/attach"
 	"github.com/yanlingqiankun/Executor/cmd/connection"
 	"github.com/yanlingqiankun/Executor/cmd/image"
 	"github.com/yanlingqiankun/Executor/cmd/machine"
@@ -37,7 +36,6 @@ func main() {
 		network.GetNetworkCmd(),
 		image.GetImageCmd(),
 		machine.GetMachineCmd(),
-		attach.GetAttachCmd(),
 		volume.GetVolumeCmd(),
 	)
 	_ = rootCmd.Execute()

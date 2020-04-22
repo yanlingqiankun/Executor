@@ -11,9 +11,9 @@ import (
 
 func GetVolumeDeleteCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "remove name",
-		Short: "remove the volume",
-		Long:  `remove specific volume in your repo`,
+		Use:   "delete name",
+		Short: "delete the volume",
+		Long:  `delete specific volume in your repo`,
 		Args:  cobra.MinimumNArgs(1),
 		Run:   volumeDeleteServe,
 	}
