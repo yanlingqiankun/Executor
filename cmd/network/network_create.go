@@ -10,10 +10,11 @@ import (
 
 var subnet string
 var gateway string
+var isolated bool
 
 func GetNetworkCreateCmd() *cobra.Command {
 	networkCreateCmd := &cobra.Command{
-		Use:   "create name --subnet [--gateway]",
+		Use:   "create name --subnet [--gateway -i]",
 		Short: "create a network",
 		Long:  `create a network for your machine`,
 		Args:  cobra.MinimumNArgs(1),
@@ -22,6 +23,7 @@ func GetNetworkCreateCmd() *cobra.Command {
 
 	networkCreateCmd.Flags().StringVar(&subnet, "subnet", "", "subnet of network")
 	networkCreateCmd.Flags().StringVar(&gateway, "gateway", "", "gateway of network")
+	networkCreateCmd.Flags().BoolVarP(&isolated, "isolated", "i", false, "create a isolated network")
 
 	_ = networkCreateCmd.MarkFlagRequired("subnet")
 
@@ -38,6 +40,7 @@ func networkCreateHandle(cmd *cobra.Command, args []string) {
 		Name:                 args[0],
 		Subnet:               subnet,
 		Gateway:              gateway,
+		Isolated:            isolated,
 	})
 	if err != nil {
 		fmt.Println("failed to create network : ", err.Error())

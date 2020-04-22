@@ -12,7 +12,7 @@ func GetMachineInspectCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "inspect id",
 		Short: "inspect the container",
-		Long:  `inspect specific container in your islands`,
+		Long:  `inspect specific container in your executor`,
 		Args:  cobra.MinimumNArgs(1),
 		Run:   machineInspectHandle,
 	}

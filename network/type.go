@@ -12,6 +12,7 @@ type Network struct {
 	Driver     string
 	CreateTime time.Time
 	GateWay    net.IP
+	IsIsolated bool
 }
 
 type NetworkDriver interface {
@@ -23,6 +24,7 @@ type BridgeNetworkDriver struct {
 	BridgeName string
 	IP         net.IP
 	Mask       net.IPMask
+	IsIsolated bool
 }
 
 type IPAM struct {
@@ -44,6 +46,7 @@ type NetworkInfo struct {
 
 type inspectInfo struct {
 	Name                string              `json:"name,omitempty"`
+	Type                string                          `json:"type"`
 	Bridge              *libvirtxml.NetworkBridge      `json:"bridge"`
 	MAC                 *libvirtxml.NetworkMAC         `json:"mac"`
 	IPs                 []libvirtxml.NetworkIP         `json:"ip"`

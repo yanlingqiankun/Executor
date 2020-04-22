@@ -250,8 +250,8 @@ func ExtraHostDeal(extraHosts []string) []*pb.HostEntry {
 }
 
 func PrintmachineNetworkError() {
-	fmt.Println("islands: please check bridge, gateway and network address, you may lost one of them.")
-	fmt.Println("See `islands machine create --help`.")
+	fmt.Println("executor: please check bridge, gateway and network address, you may lost one of them.")
+	fmt.Println("See `executor machine create --help`.")
 }
 
 func ExposedPortsHandle(portMap []string) (err error, exposedPorts map[string]*pb.PortBindings){

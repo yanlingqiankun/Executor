@@ -139,7 +139,7 @@ func Init() error {
 	return nil
 }
 
-func CreateNetwork(name, subnet, gateway string) error {
+func CreateNetwork(name, subnet, gateway string, isIsolated bool) error {
 	if _, ok := networks[name]; ok {
 		return fmt.Errorf("The network exists")
 	}
@@ -174,6 +174,7 @@ func CreateNetwork(name, subnet, gateway string) error {
 		Driver:     name,
 		CreateTime: time.Now(),
 		GateWay:    gatewayIP,
+		IsIsolated: isIsolated,
 	}
 	networks[name] = nw
 	if err := nw.dump(defaultNetworkPath); err != nil {
@@ -191,11 +192,16 @@ func CreateNetwork(name, subnet, gateway string) error {
 func ListNetwork() []*pb.NetworkInfo {
 	result := make([]*pb.NetworkInfo, 0)
 	for _, nw := range networks {
+		t := "normal"
+		if nw.IsIsolated {
+			t = "isolated"
+		}
 		result = append(result, &pb.NetworkInfo{
 			Name:                 nw.Name,
 			CreateTime:           nw.CreateTime.Format(TIME_LAYOUT),
 			Gateway:              nw.GateWay.String(),
 			Subnet:               nw.Subnet.String(),
+			Type:                 t,
 		})
 	}
 	return result
@@ -228,7 +234,7 @@ func DeleteNetwork(networkName string, force bool) error {
 }
 
 func InspectNetwork(networkName string) (string, error) {
-	_, ok := networks[networkName]
+	nw, ok := networks[networkName]
 	if !ok {
 		return "", fmt.Errorf("No Such Network: %s", networkName)
 	}
@@ -246,8 +252,13 @@ func InspectNetwork(networkName string) (string, error) {
 	if err := xml.Unmarshal([]byte(xmlStr), &structInfo); err != nil {
 		return "", err
 	}
+	t := "normal"
+	if nw.IsIsolated{
+		t = "isolated"
+	}
 	var inspectStruct = inspectInfo{
 		Name:   structInfo.Name,
+		Type:    t,
 		Bridge: structInfo.Bridge,
 		MAC:    structInfo.MAC,
 		IPs:    structInfo.IPs,

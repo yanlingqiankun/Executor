@@ -13,7 +13,7 @@ func (d *BridgeNetworkDriver) Name() string {
 }
 
 func (d *BridgeNetworkDriver) Create(IpRange *net.IPNet) error {
-	err := d.initBridge(IpRange)
+	err := d.initBridge(IpRange, d.IsIsolated)
 	if err != nil {
 		return fmt.Errorf("error init bridge: %v", err)
 	}
@@ -26,15 +26,15 @@ func (nw *Network) createBridge() error {
 		BridgeName: nw.Driver,
 		IP:         nw.GateWay,
 		Mask:       nw.Subnet.Mask,
-
+		IsIsolated: nw.IsIsolated,
 	}
 	return bridges[nw.Name].Create(nw.Subnet)
 }
 
-func (d *BridgeNetworkDriver) initBridge(IpRange *net.IPNet) error {
+func (d *BridgeNetworkDriver) initBridge(IpRange *net.IPNet, isIsolated bool) error {
 	// try to get bridge by name, if it already exists then just exit
 	bridgeName := d.BridgeName
-	if err := createBridgeInterface(bridgeName, d.IP.String(), net.IP(d.Mask).String()); err != nil {
+	if err := createBridgeInterface(bridgeName, d.IP.String(), net.IP(d.Mask).String(), isIsolated); err != nil {
 		return fmt.Errorf("Error add bridge： %s, Error: %v", bridgeName, err)
 	}
 
@@ -83,7 +83,7 @@ func deleteBridge(n *Network) error {
 	return nil
 }
 
-func createBridgeInterface(bridgeName, ip, mask string) error {
+func createBridgeInterface(bridgeName, ip, mask string, isIsolated bool) error {
 	_, err := net.InterfaceByName(bridgeName)
 	if err == nil || !strings.Contains(err.Error(), "no such network interface") {
 		return err
@@ -96,9 +96,7 @@ func createBridgeInterface(bridgeName, ip, mask string) error {
 		Name:                bridgeName,
 		UUID:                "",
 		Metadata:            nil,
-		Forward:             &libvirtxml.NetworkForward{
-			Mode:       "nat",
-		},
+
 		Bridge:              &libvirtxml.NetworkBridge{
 			Name:            bridgeName,
 			STP:             "on",
@@ -115,7 +113,15 @@ func createBridgeInterface(bridgeName, ip, mask string) error {
 		//	Metric:  "",
 		//}),
 	}
-	
+
+
+	if !isIsolated {
+		netXML.Forward = &libvirtxml.NetworkForward{
+			Mode:       "nat",
+		}
+	} else {
+
+	}
 	netXML.IPs = make([]libvirtxml.NetworkIP, 1)
 	netXML.IPs[0] = libvirtxml.NetworkIP{
 		Address:  ip,

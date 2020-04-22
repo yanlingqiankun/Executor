@@ -12,6 +12,7 @@ message NetworkCreateReq {
     string name = 1;
     string subnet = 2;
     string gateway = 3;
+    bool isolated = 4;
 }
 
 message NetworkCreateResp {
@@ -42,6 +43,7 @@ message NetworkInfo {
     string create_time = 2;
     string gateway = 3;
     string subnet = 4;
+    string type = 5;
 }
 
 message NetworkListResp {

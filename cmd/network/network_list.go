@@ -31,7 +31,7 @@ func networkList(cmd *cobra.Command, args []string) {
 		table := uitable.New()
 		table.MaxColWidth = 50
 
-		table.AddRow("Name", "TIME", "SUBNET", "GATEWAY")
+		table.AddRow("Name", "TIME", "SUBNET", "GATEWAY", "TYPE")
 
 		for _, v := range r.Networks {
 			if t, err := time.Parse(TIME_LAYOUT, strings.Split(v.CreateTime, " m=")[0]); err != nil {
@@ -43,6 +43,7 @@ func networkList(cmd *cobra.Command, args []string) {
 					t.Format("2006-01-02 15:04:05"),
 					v.Subnet,
 					v.Gateway,
+					v.Type,
 				)
 			}
 		}

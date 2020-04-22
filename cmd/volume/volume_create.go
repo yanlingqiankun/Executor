@@ -13,7 +13,7 @@ func GetVolumeCreateCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "create [name]",
 		Short: "create a volume",
-		Long:  `create a volume in your Islands`,
+		Long:  `create a volume in your Executor`,
 		Args:  cobra.MinimumNArgs(1),
 		Run:   volumeCreateServe,
 	}

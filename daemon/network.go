@@ -8,7 +8,7 @@ import (
 )
 
 func (s server) CreateNetwork(ctx context.Context, req *pb.NetworkCreateReq) (*pb.NetworkCreateResp, error) {
-	if err := createNetwork(req.Name, req.Subnet, req.Gateway); err != nil {
+	if err := createNetwork(req.Name, req.Subnet, req.Gateway, req.Isolated); err != nil {
 		logger.WithError(err).Error("failed to create network")
 		return &pb.NetworkCreateResp{
 			Id:                   "",
@@ -24,8 +24,8 @@ func (s server) CreateNetwork(ctx context.Context, req *pb.NetworkCreateReq) (*p
 	}, nil
 }
 
-func createNetwork (name, subnet, gateway string) error {
-	return network.CreateNetwork(name, subnet, gateway)
+func createNetwork (name, subnet, gateway string, isolated bool) error {
+	return network.CreateNetwork(name, subnet, gateway, isolated)
 }
 
 func (s server) DeleteNetwork(ctx context.Context, req *pb.NetworkDeleteReq) (*pb.NetworkDeleteResp, error) {

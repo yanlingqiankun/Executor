@@ -13,7 +13,7 @@ func GetVolumeAddCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "add [name] [path]",
 		Short: "add a volume",
-		Long:  `add a volume in your Islands`,
+		Long:  `add a volume in your Executor`,
 		Args:  cobra.MinimumNArgs(1),
 		Run:   volumeAddHandle,
 	}
