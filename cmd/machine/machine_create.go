@@ -13,6 +13,26 @@ import (
 	"strings"
 )
 
+
+type CgroupsSetting struct {
+	memoryString      string
+	memoryReservation string
+	memorySwap        string
+	oomKillDisable    bool
+	kernelMemory      string
+
+	cpuShares          int64
+	cpuPeriod          int64
+	cpuRealtimePeriod  int64
+	cpuRealtimeRuntime int64
+	cpuQuota           int64
+	cpusetCpus         string
+	cpusetMems         string
+	swappiness         int64
+	cgroupParent       string
+}
+
+
 var (
 	hostname        string
 	env             []string
@@ -27,6 +47,7 @@ var (
 	name            string
 	ipAddr          string
 	exposedPorts    []string
+	cgroupsSetting CgroupsSetting
 )
 
 func GetMachineCreateCmd() *cobra.Command {
@@ -45,11 +66,27 @@ func GetMachineCreateCmd() *cobra.Command {
 	machineCreateCmd.Flags().BoolVarP(&tty, "tty", "t", false, "Allocate a pseudo-TTY")
 	machineCreateCmd.Flags().StringSliceVar(&extraHostsValue, "add-host", []string{}, "Add a custom host-to-IP mapping (host:ip)")
 	machineCreateCmd.Flags().StringSliceVar(&dns, "dns", []string{}, "Set custom DNS servers")
-	machineCreateCmd.Flags().StringVar(&mac, "mac", "", "set mac for your container")
+	machineCreateCmd.Flags().StringVar(&mac, "mac", "", "set mac for your machine")
 	machineCreateCmd.Flags().StringVar(&network, "network", "", "set network for your machine")
 	machineCreateCmd.Flags().StringVar(&ipAddr, "ip", "", "set ip and mask for your machine")
 	machineCreateCmd.Flags().StringVar(&name, "name", "", "Assign a name to the machine")
 	machineCreateCmd.Flags().StringArrayVar(&exposedPorts, "exposed-ports", nil, "Publish a machine's port(s) to the host")
+
+	flags := machineCreateCmd.Flags()
+	flags.StringVar(&cgroupsSetting.cpusetCpus, "cpuset-cpus", "", "CPUs in which to allow execution (0-3, 0,1)")
+	flags.StringVar(&cgroupsSetting.cpusetMems, "cpuset-mems", "", "MEMs in which to allow execution (0-3, 0,1)")
+	flags.Int64Var(&cgroupsSetting.cpuPeriod, "cpu-period", 0, "Limit CPU CFS (Completely Fair Scheduler) period")
+	flags.Int64Var(&cgroupsSetting.cpuQuota, "cpu-quota", 0, "Limit CPU CFS (Completely Fair Scheduler) quota")
+	flags.Int64Var(&cgroupsSetting.cpuRealtimePeriod, "cpu-rt-period", 0, "Limit CPU real-time period in microseconds")
+	flags.Int64Var(&cgroupsSetting.cpuRealtimeRuntime, "cpu-rt-runtime", 0, "Limit CPU real-time runtime in microseconds")
+	flags.Int64VarP(&cgroupsSetting.cpuShares, "cpu-shares", "c", 0, "CPU shares (relative weight)")
+	flags.StringVar(&cgroupsSetting.kernelMemory, "kernel-memory", "", "Kernel memory limit")
+	flags.StringVarP(&cgroupsSetting.memoryString, "memory", "m", "", "Memory limit")
+	flags.StringVar(&cgroupsSetting.memoryReservation, "memory-reservation", "", "Memory soft limit")
+	flags.StringVar(&cgroupsSetting.memorySwap, "memory-swap", "", "Swap limit equal to memory plus swap: '-1' to enable unlimited swap")
+	flags.Int64Var(&cgroupsSetting.swappiness, "memory-swappiness", -1, "Tune container memory swappiness (0 to 100)")
+	flags.BoolVar(&cgroupsSetting.oomKillDisable, "oom-kill-disable", false, "Disable OOM Killer")
+	flags.StringVar(&cgroupsSetting.cgroupParent, "cgroup-parent", "", "Optional parent cgroup for the machine")
 
 	return machineCreateCmd
 }
