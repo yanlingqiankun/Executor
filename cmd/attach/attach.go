@@ -26,9 +26,9 @@ var (
 
 func GetAttachCmd() *cobra.Command {
 	attachCmd := &cobra.Command{
-		Use:   "attach",
+		Use:   "attach [options]",
 		Short: "Attach to machine",
-		Long:  `Attach local standard input, output, and error streams to a running container`,
+		Long:  `Attach local standard input, output, and error streams to a running machine`,
 		Args:  cobra.MinimumNArgs(1),
 		Run:   attachHandle,
 	}

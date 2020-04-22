@@ -52,7 +52,7 @@ var (
 
 func GetMachineCreateCmd() *cobra.Command {
 	machineCreateCmd := &cobra.Command{
-		Use:   "create id [command]",
+		Use:   "create id [options]",
 		Short: "create a machine",
 		Long:  `create a machine in your server`,
 		Args:  cobra.MinimumNArgs(1),

@@ -4,9 +4,9 @@ import "github.com/spf13/cobra"
 
 func GetMachineCmd() *cobra.Command {
 	machineCmd := &cobra.Command{
-		Use:   "machine [create/inspect/start/stop/kill/restart/delete/rename]",
+		Use:   "machine [create/inspect/start/stop/kill/restart/delete/rename/pause/unpause]",
 		Short: "operations of machines",
-		Long:  `the operations of the machines for example:start, create, remove`,
+		Long:  `the operations of the machines for example:start, create, delete`,
 		Args:  cobra.MinimumNArgs(0),
 		Run:   handle,
 	}

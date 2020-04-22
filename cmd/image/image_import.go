@@ -14,7 +14,7 @@ var name string
 
 func GetImageImportCmd() *cobra.Command {
 	imageImportCmd := &cobra.Command{
-		Use:   "import [OPTIONS] path --name --type",
+		Use:   "import [OPTIONS] path",
 		Short: "import your image",
 		Long:  `import the image into your repo by specify type`,
 		Args:  cobra.MinimumNArgs(0),

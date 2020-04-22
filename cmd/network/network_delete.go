@@ -13,7 +13,7 @@ var force bool
 
 func GetNetworkDeleteCmd() *cobra.Command {
 	deleteCmd :=  &cobra.Command{
-		Use:   "delete name  [-f]",
+		Use:   "delete name  [options]",
 		Short: "delete the network",
 		Long:  `delete specific network and drive of the network`,
 		Args:  cobra.MinimumNArgs(1),

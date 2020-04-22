@@ -14,7 +14,7 @@ var time_out = 0
 func GetMachineStopCmd() *cobra.Command {
 
 	containerStopCmd := &cobra.Command{
-		Use:   "stop id [--timeout]",
+		Use:   "stop id [options]",
 		Short: "stop the machine",
 		Long:  `stop specific machine in your computer`,
 		Args:  cobra.MinimumNArgs(1),

@@ -6,9 +6,9 @@ import (
 
 func GetImageCmd() *cobra.Command {
 	imageCmd := &cobra.Command{
-		Use:   "image [list/remove/import]",
+		Use:   "image [list/delete/import]",
 		Short: "operations of images",
-		Long:  `the operations of the images for example:list, import, remove`,
+		Long:  `the operations of the images for example:list, import, delete`,
 		Args:  cobra.MinimumNArgs(0),
 		Run:   func(cmd *cobra.Command, args []string) { _ = cmd.Help() },
 	}

@@ -1,6 +1,6 @@
 .PHONY: build proto clean help cmd statbuild
 
-Executor_TARGET = executor
+Executor_TARGET = executor-server
 
 BUILD_TIME = $(shell date -R)
 GIT_COMMIT = $(shell git rev-parse --short HEAD)
@@ -22,7 +22,7 @@ build-executor:
 	  -X 'github.com/yanlingqiankun/executor/daemon.BuildTime=${BUILD_TIME}'" -o ${Executor_TARGET}
 
 cmd:
-	cd cmd && go build -v -o ../cli
+	cd cmd && go build -v -o ../executor
 
 proto:
 	protoc --go_out=plugins=grpc,paths=source_relative:. pb/*.proto
@@ -37,10 +37,10 @@ cleanall:
 	rm -f pb/*.pb.go
 
 run:
-	sudo -E ./executor
+	sudo -E ./executor-server
 
 stat:
-	@echo "生成文件大小: " $(shell echo "scale=3; $(shell stat -c %s executor)/1024/1024" |bc) "MB"
+	@echo "生成文件大小: " $(shell echo "scale=3; $(shell stat -c %s executor-server)/1024/1024" |bc) "MB"
 
 
 install:
@@ -52,10 +52,10 @@ endif
 
 help:
 	@echo "=======使用说明======="
-	@echo "make: 编译、运行executor"
-	@echo "make build: 编译executor"
+	@echo "make: 编译、运行executor-server"
+	@echo "make build: 编译executor-server"
 	@echo "make proto: 编译protobuf生成go文件"
 	@echo "make install: 设置用户组"
 	@echo "make clean: 清理二进制文件和编译缓存"
 	@echo "make cleanall: 清理编译缓存，import库，proto文件"
-	@echo "make run：运行编译生成的executor"
+	@echo "make run：运行编译生成的executor-server"

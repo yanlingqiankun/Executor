@@ -14,7 +14,7 @@ var isolated bool
 
 func GetNetworkCreateCmd() *cobra.Command {
 	networkCreateCmd := &cobra.Command{
-		Use:   "create name --subnet [--gateway -i]",
+		Use:   "create name --subnet [options]",
 		Short: "create a network",
 		Long:  `create a network for your machine`,
 		Args:  cobra.MinimumNArgs(1),
