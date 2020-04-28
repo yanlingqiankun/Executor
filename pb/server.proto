@@ -11,34 +11,65 @@ import "google/protobuf/empty.proto";
 
 service Executor {
     // notwork
+
+    // 创建network
     rpc CreateNetwork(NetworkCreateReq) returns (NetworkCreateResp) {}
+    // 删除network
     rpc DeleteNetwork(NetworkDeleteReq) returns (NetworkDeleteResp) {}
+    // inspect network
     rpc InspectNetwork(NetworkInspectReq) returns (NetworkInspectResp) {}
+    // 展示所有network
     rpc ListNetwork(google.protobuf.Empty) returns (NetworkListResp) {}
 
     // image
+    
+    // 导入image
     rpc ImportImage(ImportImageReq) returns (ImportImageResp) {}
+    // 展示所有image
     rpc ListImage(google.protobuf.Empty) returns (ListImageResp) {}
+    // 删除image
     rpc DeleteImage(DeleteImageReq) returns (DeleteImageResp) {}
 
     // machine
+    
+    // 创建machine
     rpc CreateMachine(CreateMachineReq) returns (CreateMachineResp) {}
+    // 删除machine
     rpc DeleteMachine(DeleteMachineReq) returns (Error) {}
+    // 展示所有machine
     rpc ListMachine(google.protobuf.Empty) returns (ListMachineResp) {}
+    // 开启machine
     rpc StartMachine(StartMachineReq) returns (Error) {}
+    // 强制关闭machine
     rpc KillMachine(KillMachineReq) returns (Error) {}
+    // 关闭machine
     rpc StopMachine(StopMachineReq) returns (Error) {}
+    // 重命名machine
     rpc RenameMachine(RenameMachineReq) returns (Error) {}
+    // 重启machine
     rpc RestartMachine(RestartMachineReq) returns (Error) {}
+    // 连接进入machine
     rpc AttachMachine (stream AttachStreamIn) returns (stream AttachStreamOut) {}
+    // 查看machine
     rpc InspectMachine(MachineIdReq) returns (InspectMachineResp) {}
+    // 挂起machine
+    rpc PauseMachine (MachineIdReq) returns (Error) {}
+    // 恢复machine
+    rpc UnpauseMachine (MachineIdReq) returns (Error) {}
 
+    // 重新定义machine伪终端长和宽
     rpc ResizeMachineTTY (ResizeTTYReq) returns (Error) {}
+    // 判断machine是否有伪终端
     rpc CanAttachJudge (MachineIdReq) returns (CanAttachJudgeResp) {}
 
     // volume
+
+    // 展示所有volume
     rpc ListVolume (google.protobuf.Empty) returns (ListVolumeResp) {}
-    rpc CreateVolume(CreateVolumeReq) returns (CreateVolumeResp) {}                 // 创建一个卷
-    rpc AddVolume (AddVolumeReq) returns (AddVolumeResp) {}                         // 将已有的目录添加为卷
+    // 创建volume
+    rpc CreateVolume(CreateVolumeReq) returns (CreateVolumeResp) {}
+    // 添加volume
+    rpc AddVolume (AddVolumeReq) returns (AddVolumeResp) {}
+    // 删除volume
     rpc DeleteVolume (DeleteVolumeReq) returns (Error) {}
 }
