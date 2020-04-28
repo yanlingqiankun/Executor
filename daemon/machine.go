@@ -381,3 +381,37 @@ func inspectmachine(id string) (*pb.InspectMachineResp, error) {
 		}, nil
 	}
 }
+
+func (s server) PauseMachine(ctx context.Context, req *pb.MachineIdReq) (*pb.Error, error) {
+	if err := pauseMachine(req.Id); err != nil {
+		return newErr(1, err), err
+	} else {
+		return newErr(0, err), err
+	}
+}
+
+func pauseMachine(id string) error {
+	m, err := machine.GetMachine(id)
+	if err != nil {
+		logger.WithError(err).Error("failed to get get machine")
+		return err
+	}
+	return m.Pause()
+}
+
+func (s server) UnpauseMachine(ctx context.Context, req *pb.MachineIdReq) (*pb.Error, error) {
+	if err := unpauseMachine(req.Id); err != nil {
+		return newErr(1, err), err
+	} else {
+		return newErr(0, err), err
+	}
+}
+
+func unpauseMachine(id string) error {
+	m, err := machine.GetMachine(id)
+	if err != nil {
+		logger.WithError(err).Error("failed to get get machine")
+		return err
+	}
+	return m.Unpause()
+}
