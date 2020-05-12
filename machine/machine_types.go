@@ -22,18 +22,18 @@ type Machine interface {
 }
 
 type Factory interface {
-	SetName(string) error          // 容器的名字
-	SetHostname(string)            // 设置主机名
-	SetTTY(bool)                   // 设置是否使用终端
-	SetNetworks([]*Network)        // 添加网络
-	SetRoutes([]*Route)            // 添加路由
-	SetImage(string, string, string)               // 添加镜像地址
-	SetVolumes([]*Volume)          // 添加卷
-	SetEntrypoint([]string)        // EntryPoint (entrypoint, cmd)
-	SetCmd([]string)               // Cmd
-	SetWorkingDir(string)          // WorkingDir 默认 "/"
-	SetUser(string)                // User
-	SetEnv([]string)               // Env
+	SetName(string) error            // 容器的名字
+	SetHostname(string)              // 设置主机名
+	SetTTY(bool)                     // 设置是否使用终端
+	SetNetworks([]*Network)          // 添加网络
+	SetRoutes([]*Route)              // 添加路由
+	SetImage(string, string, string) // 添加镜像地址
+	SetVolumes([]*Volume)            // 添加卷
+	SetEntrypoint([]string)          // EntryPoint (entrypoint, cmd)
+	SetCmd([]string)                 // Cmd
+	SetWorkingDir(string)            // WorkingDir 默认 "/"
+	SetUser(string)                  // User
+	SetEnv([]string)                 // Env
 	SetTTYSize(width, height uint16)
 	GetBase() (*Base, error)	  // get machine entry
 	SetHosts([]string)            // 格式：{"hostname:192.168.0.2"}

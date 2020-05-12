@@ -50,7 +50,7 @@ func (s *server) CreateVolume(ctx context.Context, req *pb.CreateVolumeReq) (*pb
 }
 
 func (s *server) DeleteVolume(ctx context.Context, req *pb.DeleteVolumeReq) (*pb.Error, error) {
-	if err := volume.Delete(req.Name); err != nil {
+	if err := volume.Delete(req.Name, req.Purge); err != nil {
 		return newErr(5, err), err
 	} else {
 		return newErr(0, err), nil

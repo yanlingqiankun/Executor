@@ -149,14 +149,38 @@ func (VM *BaseVM) SetVolumes(volumes []*Volume) {
 	if volumes == nil || len(volumes) == 0 {
 		return
 	}
-	//for _, v := range volumes {
-	//	dest := v.Destination
-	//	if dest == "" {
-	//		continue
-	//	}
-	//
-	//	VM.RuntimeConfig.Volumes[dest] = v
-	//}
+	VM.BaseInfo.RuntimeConfig.Volumes = make(map[string]*Volume)
+	for _, v := range volumes {
+		dest := v.Destination
+		if dest == "" {
+			continue
+		}
+		var readOnly *libvirtxml.DomainFilesystemReadOnly
+		readOnly = nil
+		if v.RW == WritePermission {
+			readOnly = &libvirtxml.DomainFilesystemReadOnly{}
+		}
+		VM.VMConfig.Devices.Filesystems = append(VM.VMConfig.Devices.Filesystems, libvirtxml.DomainFilesystem{
+			XMLName:        xml.Name{},
+			AccessMode:     "passthrough",
+			Model:          "",
+			Driver:         &libvirtxml.DomainFilesystemDriver{
+				Type:     "path",
+				Format:   "",
+				Name:     "",
+				WRPolicy: "immediate",
+				IOMMU:    "",
+				ATS:      "",
+			},
+			Source:         &libvirtxml.DomainFilesystemSource{
+				Mount:    &libvirtxml.DomainFilesystemSourceMount{Dir:v.Source},
+			},
+			Target:         &libvirtxml.DomainFilesystemTarget{Dir:v.Destination},
+			ReadOnly:       readOnly,
+		})
+
+		VM.BaseInfo.RuntimeConfig.Volumes[dest] = v
+	}
 
 	// TODO drive filesystem to mount
 }

@@ -79,34 +79,55 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ExecutorClient interface {
-	// notwork
+	// 创建network
 	CreateNetwork(ctx context.Context, in *NetworkCreateReq, opts ...grpc.CallOption) (*NetworkCreateResp, error)
+	// 删除network
 	DeleteNetwork(ctx context.Context, in *NetworkDeleteReq, opts ...grpc.CallOption) (*NetworkDeleteResp, error)
+	// inspect network
 	InspectNetwork(ctx context.Context, in *NetworkInspectReq, opts ...grpc.CallOption) (*NetworkInspectResp, error)
+	// 展示所有network
 	ListNetwork(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*NetworkListResp, error)
-	// image
+	// 导入image
 	ImportImage(ctx context.Context, in *ImportImageReq, opts ...grpc.CallOption) (*ImportImageResp, error)
+	// 展示所有image
 	ListImage(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListImageResp, error)
+	// 删除image
 	DeleteImage(ctx context.Context, in *DeleteImageReq, opts ...grpc.CallOption) (*DeleteImageResp, error)
-	// machine
+	// 创建machine
 	CreateMachine(ctx context.Context, in *CreateMachineReq, opts ...grpc.CallOption) (*CreateMachineResp, error)
+	// 删除machine
 	DeleteMachine(ctx context.Context, in *DeleteMachineReq, opts ...grpc.CallOption) (*Error, error)
+	// 展示所有machine
 	ListMachine(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListMachineResp, error)
+	// 开启machine
 	StartMachine(ctx context.Context, in *StartMachineReq, opts ...grpc.CallOption) (*Error, error)
+	// 强制关闭machine
 	KillMachine(ctx context.Context, in *KillMachineReq, opts ...grpc.CallOption) (*Error, error)
+	// 关闭machine
 	StopMachine(ctx context.Context, in *StopMachineReq, opts ...grpc.CallOption) (*Error, error)
+	// 重命名machine
 	RenameMachine(ctx context.Context, in *RenameMachineReq, opts ...grpc.CallOption) (*Error, error)
+	// 重启machine
 	RestartMachine(ctx context.Context, in *RestartMachineReq, opts ...grpc.CallOption) (*Error, error)
+	// 连接进入machine
 	AttachMachine(ctx context.Context, opts ...grpc.CallOption) (Executor_AttachMachineClient, error)
+	// 查看machine
 	InspectMachine(ctx context.Context, in *MachineIdReq, opts ...grpc.CallOption) (*InspectMachineResp, error)
+	// 挂起machine
 	PauseMachine(ctx context.Context, in *MachineIdReq, opts ...grpc.CallOption) (*Error, error)
+	// 恢复machine
 	UnpauseMachine(ctx context.Context, in *MachineIdReq, opts ...grpc.CallOption) (*Error, error)
+	// 重新定义machine伪终端长和宽
 	ResizeMachineTTY(ctx context.Context, in *ResizeTTYReq, opts ...grpc.CallOption) (*Error, error)
+	// 判断machine是否有伪终端
 	CanAttachJudge(ctx context.Context, in *MachineIdReq, opts ...grpc.CallOption) (*CanAttachJudgeResp, error)
-	// volume
+	// 展示所有volume
 	ListVolume(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListVolumeResp, error)
+	// 创建volume
 	CreateVolume(ctx context.Context, in *CreateVolumeReq, opts ...grpc.CallOption) (*CreateVolumeResp, error)
+	// 添加volume
 	AddVolume(ctx context.Context, in *AddVolumeReq, opts ...grpc.CallOption) (*AddVolumeResp, error)
+	// 删除volume
 	DeleteVolume(ctx context.Context, in *DeleteVolumeReq, opts ...grpc.CallOption) (*Error, error)
 }
 
@@ -367,34 +388,55 @@ func (c *executorClient) DeleteVolume(ctx context.Context, in *DeleteVolumeReq, 
 
 // ExecutorServer is the server API for Executor service.
 type ExecutorServer interface {
-	// notwork
+	// 创建network
 	CreateNetwork(context.Context, *NetworkCreateReq) (*NetworkCreateResp, error)
+	// 删除network
 	DeleteNetwork(context.Context, *NetworkDeleteReq) (*NetworkDeleteResp, error)
+	// inspect network
 	InspectNetwork(context.Context, *NetworkInspectReq) (*NetworkInspectResp, error)
+	// 展示所有network
 	ListNetwork(context.Context, *empty.Empty) (*NetworkListResp, error)
-	// image
+	// 导入image
 	ImportImage(context.Context, *ImportImageReq) (*ImportImageResp, error)
+	// 展示所有image
 	ListImage(context.Context, *empty.Empty) (*ListImageResp, error)
+	// 删除image
 	DeleteImage(context.Context, *DeleteImageReq) (*DeleteImageResp, error)
-	// machine
+	// 创建machine
 	CreateMachine(context.Context, *CreateMachineReq) (*CreateMachineResp, error)
+	// 删除machine
 	DeleteMachine(context.Context, *DeleteMachineReq) (*Error, error)
+	// 展示所有machine
 	ListMachine(context.Context, *empty.Empty) (*ListMachineResp, error)
+	// 开启machine
 	StartMachine(context.Context, *StartMachineReq) (*Error, error)
+	// 强制关闭machine
 	KillMachine(context.Context, *KillMachineReq) (*Error, error)
+	// 关闭machine
 	StopMachine(context.Context, *StopMachineReq) (*Error, error)
+	// 重命名machine
 	RenameMachine(context.Context, *RenameMachineReq) (*Error, error)
+	// 重启machine
 	RestartMachine(context.Context, *RestartMachineReq) (*Error, error)
+	// 连接进入machine
 	AttachMachine(Executor_AttachMachineServer) error
+	// 查看machine
 	InspectMachine(context.Context, *MachineIdReq) (*InspectMachineResp, error)
+	// 挂起machine
 	PauseMachine(context.Context, *MachineIdReq) (*Error, error)
+	// 恢复machine
 	UnpauseMachine(context.Context, *MachineIdReq) (*Error, error)
+	// 重新定义machine伪终端长和宽
 	ResizeMachineTTY(context.Context, *ResizeTTYReq) (*Error, error)
+	// 判断machine是否有伪终端
 	CanAttachJudge(context.Context, *MachineIdReq) (*CanAttachJudgeResp, error)
-	// volume
+	// 展示所有volume
 	ListVolume(context.Context, *empty.Empty) (*ListVolumeResp, error)
+	// 创建volume
 	CreateVolume(context.Context, *CreateVolumeReq) (*CreateVolumeResp, error)
+	// 添加volume
 	AddVolume(context.Context, *AddVolumeReq) (*AddVolumeResp, error)
+	// 删除volume
 	DeleteVolume(context.Context, *DeleteVolumeReq) (*Error, error)
 }
 

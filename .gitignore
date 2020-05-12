@@ -13,3 +13,15 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+.idea/vcs.xml
+
+.idea/modules.xml
+
+.idea/misc.xml
+
+.idea/Executor.iml
+
+cli
+
+executor

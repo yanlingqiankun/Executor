@@ -10,6 +10,7 @@ import (
 	"github.com/yanlingqiankun/Executor/network/proxy"
 	"github.com/yanlingqiankun/Executor/pb"
 	"github.com/yanlingqiankun/Executor/stringid"
+	"github.com/yanlingqiankun/Executor/volume"
 	"net"
 	"strings"
 )
@@ -113,22 +114,26 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 		factory.SetNetworks(machineInterface)
 	}
 
-	//if req.Volumes != nil {
-	//	volumes := make([]*island.ContainerVolume, len(req.Volumes))
-	//	for index, v := range req.Volumes {
-	//		flag := island.ReadPermission
-	//		if !v.Readonly {
-	//			flag |= island.WritePermission
-	//		}
-	//		volumes[index] = &island.ContainerVolume{
-	//			Destination: v.Destination,
-	//			RW:          flag,
-	//			Source:      v.Source,
-	//			Name:        v.Name,
-	//		}
-	//	}
-	//	factory.SetVolumes(volumes)
-	//}
+	if req.Volumes != nil {
+		volumes := make([]*machine.Volume, len(req.Volumes))
+		for index, v := range req.Volumes {
+			vo, err := volume.Open(v.Source)
+			if err != nil {
+				return "", err
+			}
+			flag := machine.ReadPermission
+			if !v.Readonly {
+				flag |= machine.WritePermission
+			}
+			volumes[index] = &machine.Volume{
+				Destination: v.Destination,
+				RW:          flag,
+				Source:      vo.MountPoint(),
+				Name:        v.Name,
+			}
+		}
+		factory.SetVolumes(volumes)
+	}
 
 	if req.ExposedPorts != nil {
 		proxies := make([]proxy.ProxyInfo, 0)

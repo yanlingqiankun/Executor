@@ -155,11 +155,19 @@ func Add(path string, name string) (*Volume, error) {
 // 删除卷
 // 此操作会删除整个目录
 // 成功时返回nil，否则返回错误
-func Delete(name string) error {
+func Delete(name string, purge bool) error {
 	if volume, ok := volumeMap.Load(name); ok {
 		if len(volume.(*Volume).containers) != 0 {
 			logger.Error("failed to remove volume : The volume was in use")
 			return fmt.Errorf("The volume was in use")
+		}
+		if !purge {
+			volumeMap.Delete(name)
+			if err := dumpVolumes(); err != nil {
+				logger.WithError(err).Error("failed to save volume information")
+				return err
+			}
+			return nil
 		}
 		if err := os.RemoveAll(volume.(*Volume).Path); err != nil {
 			return err

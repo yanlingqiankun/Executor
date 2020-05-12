@@ -99,7 +99,7 @@ func machineCreateHandle(cmd *cobra.Command, args []string) {
 	imageId = image.CheckNameOrId(imageId)
 
 	//处理volumes
-	//volumes := MountHandle(mountInfo)
+	volumes := MountHandle(mountInfo)
 
 	//ExtraHost
 	extraHostsParam := ExtraHostDeal(extraHostsValue)
@@ -175,7 +175,7 @@ func machineCreateHandle(cmd *cobra.Command, args []string) {
 			Interfaces: interfaceSlice,
 		},
 		Env: env,
-		//Volumes:    volumes,
+		Volumes:    volumes,
 		//StopSignal: stopSignal,
 		Tty:        tty,
 		Cmd:        command,
@@ -228,46 +228,45 @@ func CheckNameOrId(machineId string) string {
 
 	return machineId
 }
-//
-//func MountHandle(mountStrList []string) (volumes []*pb.machineVolume) {
-//
-//	for _, mountStr := range mountStrList {
-//		mountSlice := strings.Split(mountStr, ",")
-//
-//		verifyMap := map[string]string{
-//			"name":   "",
-//			"source": "",
-//			"target": "",
-//			"ro":     "",
-//		}
-//
-//		readOnly := false
-//
-//		for _, val := range mountSlice {
-//			if strings.Contains(val, "=") {
-//				kv := strings.Split(val, "=")
-//				k := strings.TrimSpace(kv[0])
-//				v := strings.TrimSpace(kv[1])
-//				if _, ok := verifyMap[k]; ok {
-//					verifyMap[k] = v
-//				}
-//			} else {
-//				if val == "ro" {
-//					readOnly = true
-//				}
-//			}
-//		}
-//
-//		volumes = append(volumes, &pb.machineVolume{
-//			Name:        verifyMap["name"],
-//			Source:      verifyMap["source"],
-//			Destination: verifyMap["target"],
-//			Readonly:    readOnly,
-//		})
-//
-//	}
-//	return
-//}
+
+func MountHandle(mountStrList []string) (volumes []*pb.MachineVolume) {
+
+	for _, mountStr := range mountStrList {
+		mountSlice := strings.Split(mountStr, ",")
+
+		verifyMap := map[string]string{
+			"name": "",
+			"source": "",
+			"target": "",
+			"ro":     "",
+		}
+
+		readOnly := false
+
+		for _, val := range mountSlice {
+			if strings.Contains(val, "=") {
+				kv := strings.Split(val, "=")
+				k := strings.TrimSpace(kv[0])
+				v := strings.TrimSpace(kv[1])
+				if _, ok := verifyMap[k]; ok {
+					verifyMap[k] = v
+				}
+			} else {
+				if val == "ro" {
+					readOnly = true
+				}
+			}
+		}
+
+		volumes = append(volumes, &pb.MachineVolume{
+			Source:      verifyMap["source"],
+			Destination: verifyMap["target"],
+			Readonly:    readOnly,
+		})
+
+	}
+	return
+}
 
 func ExtraHostDeal(extraHosts []string) []*pb.HostEntry {
 	var extra []*pb.HostEntry

@@ -35,4 +35,5 @@ message AddVolumeResp {
 
 message DeleteVolumeReq {
     string name = 1;
+    bool purge = 2;
 }

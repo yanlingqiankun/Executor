@@ -3,6 +3,7 @@ package machine
 import (
 	"context"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/yanlingqiankun/Executor/network/proxy"
 	"time"
 )
@@ -131,11 +132,26 @@ func (container *BaseContainer) SetVolumes(volumes []*Volume) {
 	if volumes == nil || len(volumes) == 0 {
 		return
 	}
+	container.Base.RuntimeConfig.Volumes = make(map[string]*Volume)
 	for _, v := range volumes {
 		dest := v.Destination
 		if dest == "" {
 			continue
 		}
+		readOnly := true
+		if v.RW == WritePermission {
+			readOnly = false
+		}
+		container.HostConfig.Mounts = append(container.HostConfig.Mounts, mount.Mount{
+			Type:          mount.TypeBind,
+			Source:        v.Source,
+			Target:        v.Destination,
+			ReadOnly:      readOnly,
+			Consistency:   "",
+			BindOptions:   nil,
+			VolumeOptions: nil,
+			TmpfsOptions:  nil,
+		})
 		container.Base.RuntimeConfig.Volumes[dest] = v
 	}
 }

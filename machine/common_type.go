@@ -8,7 +8,7 @@ const (
 	WritePermission uint8 = 2
 )
 
-type ContainerVolume struct {
+type Volume struct {
 	Destination string `json:"destination"`
 	RW          uint8  `json:"rw"`
 	Source      string `json:"source"`
@@ -89,12 +89,3 @@ type RuntimeConfig struct {
 	ExposedPorts []proxy.ProxyInfo           `json:"exposed_ports"`
 	ProxyManager proxy.ProxyManager
 }
-
-type Volume struct {
-	Destination string `json:"destination"`
-	RW          uint8  `json:"rw"`
-	Source      string `json:"source"`
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-}
-

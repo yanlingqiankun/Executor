@@ -13,6 +13,7 @@ message CreateMachineReq {
     string working_dir = 6;
     map<string, PortBindings> exposed_ports = 7; // 端口映射
     Network network = 8;
+    repeated MachineVolume volumes = 9;
 }
 
 message PortBinding {
@@ -129,4 +130,11 @@ message NetworkInterface {
 message NetworkAddress {
     string ip = 1;
     int32 mask = 2;
+}
+
+message MachineVolume {
+    string name = 1;                    // 使用的卷名称，为空时自动创建一个卷
+    string source = 2;                  // host内的路径，当路径为空时则自动在volume目录下创建一个卷
+    string destination = 3;             // machine内的挂载路径
+    bool readonly = 4;                  // 是否使用只读模式
 }
