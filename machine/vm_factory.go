@@ -2,12 +2,14 @@ package machine
 
 import (
 	"encoding/xml"
+	"github.com/docker/docker/api/types/container"
 	libvirtxml "github.com/libvirt/libvirt-go-xml"
 	"github.com/yanlingqiankun/Executor/conf"
 	"github.com/yanlingqiankun/Executor/image"
 	"github.com/yanlingqiankun/Executor/network/proxy"
 	"github.com/yanlingqiankun/Executor/stringid"
 	"github.com/yanlingqiankun/Executor/util"
+	"runtime"
 	"strconv"
 	"time"
 )
@@ -289,45 +291,133 @@ func (VM *BaseVM) SetNetworks(networks []*Network) {
 				Dev:     nw.Name,
 			},
 		})
-		//for i, address := range nw.Address{
-		//	var temp []string
-		//	temp = strings.Split(address,"/")
-		//	if len(temp) == 1 {
-		//		temp = append(temp, "24")
-		//	}
-		//	//pre, err := strconv.Atoi(temp[1])
-		//	//if err != nil {
-		//	//	logger.WithError(err).Error("failed to get ip prefix of ", temp[1])
-		//	//	pre = 24
-		//	//}
-		//	//prefix := uint(pre)
-		//	//VM.VMConfig.Devices.Interfaces[idx].IP = append(VM.VMConfig.Devices.Interfaces[idx].IP, libvirtxml.DomainInterfaceIP{
-		//	//	Address: temp[0],
-		//	//	Family:  "",
-		//	//	Prefix:  prefix,
-		//	//	Peer:    "",
-		//	//})
-		//
-		//	if i == 0 {
-		//		// todo set route
-		//	}
-		//}
-
-		//if idx == 0 {
-		//	// default route
-		//	VM.VMConfig.Devices.Interfaces[0].Route = append(VM.VMConfig.Devices.Interfaces[0].Route, libvirtxml.DomainInterfaceRoute{
-		//		Family:  "ipv4",
-		//		Address: "0.0.0.0",
-		//		Netmask: "",
-		//		Prefix:  0,
-		//		Gateway: nw.Gateway,
-		//		Metric:  0,
-		//	})
-		//}
 	}
 	VM.BaseInfo.RuntimeConfig.Networks = networks
 }
 
 func (VM *BaseVM) SetRoutes([]*Route) {
 	panic("implement me")
+}
+
+func (VM *BaseVM) SetCgroups(res container.Resources) {
+	logger.Debugf("prepare to set resource limit for VM")
+	VM.VMConfig.CPUTune = &libvirtxml.DomainCPUTune{}
+	//CPU
+	if res.CpusetCpus != "" {
+		VM.VMConfig.VCPU = &libvirtxml.DomainVCPU{
+			Placement: "",
+			CPUSet:    res.CpusetCpus,
+			Current:   "",
+			Value:     runtime.NumCPU(),
+		}
+	}
+	if res.CPUPeriod >= 1000 {
+		VM.VMConfig.CPUTune.Period = &libvirtxml.DomainCPUTunePeriod{Value:uint64(res.CPUPeriod)}
+	}
+	if res.CPUQuota >= 1000 {
+		VM.VMConfig.CPUTune.Quota =  &libvirtxml.DomainCPUTuneQuota{Value:res.CPUQuota}
+	}
+	if res.CPURealtimePeriod >= 1000 {
+		VM.VMConfig.CPUTune.GlobalPeriod = &libvirtxml.DomainCPUTunePeriod{Value:uint64(res.CPURealtimeRuntime)}
+	}
+	if res.CPURealtimeRuntime >= 1000 {
+		VM.VMConfig.CPUTune.GlobalQuota = &libvirtxml.DomainCPUTuneQuota{Value:res.CPURealtimeRuntime}
+	}
+
+	//Memory
+	if res.Memory != 0 {
+		VM.VMConfig.Memory = &libvirtxml.DomainMemory{
+			Value:    uint(res.Memory),
+			Unit:     "",
+			DumpCore: "",
+		}
+	}
+
+	//Device
+	VM.VMConfig.BlockIOTune = &libvirtxml.DomainBlockIOTune{}
+	if res.BlkioWeight != 0 {
+		VM.VMConfig.BlockIOTune.Weight = uint(res.BlkioWeight)
+	}
+	deviceList := getDeviceLimits(res)
+	for _, v := range deviceList {
+		VM.VMConfig.BlockIOTune.Device = append(VM.VMConfig.BlockIOTune.Device, libvirtxml.DomainBlockIOTuneDevice{
+			Path:          v.path,
+			Weight:        v.weight,
+			ReadIopsSec:   v.readIOpsSec,
+																																																																																																			WriteIopsSec:  v.writeIOpsSec,
+			ReadBytesSec:  v.readBytesSec,
+			WriteBytesSec: v.writeBytesSec,
+		})
+	}
+}
+
+type deviceLimit struct {
+	path string
+	weight uint
+	readBytesSec uint
+	writeBytesSec uint
+	readIOpsSec uint
+	writeIOpsSec uint
+}
+
+func getDeviceLimits(res container.Resources) map[string]deviceLimit {
+	deviceList := make(map[string]deviceLimit)
+	if res.BlkioWeightDevice != nil {
+		for _, d := range res.BlkioWeightDevice {
+			deviceList[d.Path] = deviceLimit{
+				path:          d.Path,
+				weight:        uint(d.Weight),
+			}
+		}
+	}
+	if res.BlkioDeviceReadBps != nil {
+		for _, d := range res.BlkioDeviceReadBps {
+			if device, ok := deviceList[d.Path]; ok {
+				device.readBytesSec = uint(d.Rate)
+			} else {
+				deviceList[d.Path] = deviceLimit{
+					path:          d.Path,
+					readBytesSec:  uint(d.Rate),
+				}
+			}
+		}
+	}
+	if res.BlkioDeviceWriteBps != nil {
+		for _, d := range res.BlkioDeviceWriteBps {
+			if device, ok := deviceList[d.Path]; ok {
+				device.writeBytesSec = uint(d.Rate)
+			} else {
+				deviceList[d.Path] = deviceLimit{
+					path:          d.Path,
+					writeBytesSec:  uint(d.Rate),
+				}
+			}
+		}
+	}
+
+	if res.BlkioDeviceReadIOps != nil {
+		for _, d := range res.BlkioDeviceReadIOps {
+			if device, ok := deviceList[d.Path]; ok {
+				device.readIOpsSec = uint(d.Rate)
+			} else {
+				deviceList[d.Path] = deviceLimit{
+					path:          d.Path,
+					readIOpsSec:  uint(d.Rate),
+				}
+			}
+		}
+	}
+	if res.BlkioDeviceWriteIOps != nil {
+		for _, d := range res.BlkioDeviceWriteIOps {
+			if device, ok := deviceList[d.Path]; ok {
+				device.writeIOpsSec = uint(d.Rate)
+			} else {
+				deviceList[d.Path] = deviceLimit{
+					path:          d.Path,
+					writeIOpsSec:  uint(d.Rate),
+				}
+			}
+		}
+	}
+	return deviceList
 }

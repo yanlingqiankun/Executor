@@ -61,7 +61,7 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 	factory.SetEnv(req.Env)
 	factory.SetWorkingDir(req.WorkingDir)
 
-	//resources, err := getContainerResources(req.Resources)
+	//resources, err := getMachineResources(req.Resources)
 	//if err != nil {
 	//	return &pb.CreateContainerResp{Err: newErr(1, err)}, err
 	//}
@@ -69,6 +69,15 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 	//	CgroupsPath:    req.Resources.CgroupParent,
 	//	LinuxResources: resources,
 	//})
+	fmt.Println(req.Resources)
+	if req.Resources != nil {
+		resources, err := getMachineResources(req.Resources)
+		if err != nil {
+			return "", err
+		}
+		factory.SetCgroups(resources)
+	}
+
 	if req.Network != nil {
 		factory.SetHostname(req.Network.Hostname)
 		factory.SetHosts(convertHostsFromPB(req.Network.ExtraHosts))

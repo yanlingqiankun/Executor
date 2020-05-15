@@ -1,6 +1,7 @@
 package machine
 
 import (
+	"github.com/docker/docker/api/types/container"
 	"github.com/yanlingqiankun/Executor/network/proxy"
 	"time"
 )
@@ -39,6 +40,7 @@ type Factory interface {
 	SetHosts([]string)            // 格式：{"hostname:192.168.0.2"}
 	SetExposedPorts(info []proxy.ProxyInfo)
 	Create() error
+	SetCgroups(container.Resources)
 }
 
 type Base struct {
@@ -61,4 +63,10 @@ type MachineInfo struct {
 	ImageType    string
 	Status       string
 	ImageId      string
+}
+
+type CgroupsConfig struct {
+	//CgroupsPath    string                `json:"cgroupsPath,omitempty"` // cgroup path 必须是绝对路径
+	//LinuxResources *specs.LinuxResources `json:"resources,omitempty"`
+	container.Resources
 }

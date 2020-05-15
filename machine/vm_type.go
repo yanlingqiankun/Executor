@@ -8,3 +8,4 @@ type BaseVM struct {
 	BaseInfo       *Base
 	VMConfig      *libvirtxml.Domain
 }
+

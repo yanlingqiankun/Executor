@@ -3,6 +3,7 @@ package machine
 import (
 	"context"
 	"fmt"
+	"github.com/docker/go-units"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/spf13/cobra"
 	"github.com/yanlingqiankun/Executor/cmd/connection"
@@ -104,30 +105,6 @@ func machineCreateHandle(cmd *cobra.Command, args []string) {
 	//ExtraHost
 	extraHostsParam := ExtraHostDeal(extraHostsValue)
 
-	//cidr
-
-	//if cidr != "" {
-	//	reg, err := regexp.Compile(`([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/([0-9]{0,2})`)
-	//	if err != nil {
-	//		fmt.Println(err)
-	//		return
-	//	}
-	//
-	//	subStr := reg.FindAllStringSubmatch(cidr, 1)[0]
-	//
-	//	mask, err = strconv.Atoi(subStr[2])
-	//
-	//	if err != nil {
-	//		fmt.Println(err)
-	//		return
-	//	}
-	//
-	//	networkAddress = append(networkAddress, &pb.NetworkAddress{
-	//		Ip:   ipAddr,
-	//		Mask: int32(mask),
-	//	})
-	//}
-
 	// interface
 	var interfaceSlice []*pb.NetworkInterface
 
@@ -166,6 +143,8 @@ func machineCreateHandle(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	resources, err := parse_resource()
+
 	r, err := connection.Client.CreateMachine(context.Background(), &pb.CreateMachineReq{
 		ImageId: imageId,
 		Name:    name,
@@ -179,6 +158,7 @@ func machineCreateHandle(cmd *cobra.Command, args []string) {
 		//StopSignal: stopSignal,
 		Tty:        tty,
 		Cmd:        command,
+		Resources:resources,
 		ExposedPorts:exposedPortsStruct,
 	})
 	if err != nil {
@@ -351,3 +331,67 @@ func ExposedPortsHandle(portMap []string) (err error, exposedPorts map[string]*p
 	}
 	return
 }
+
+func parse_resource() (*pb.Resources, error) {
+	var memory int64
+	var err error
+	if cgroupsSetting.memoryString != "" {
+		memory, err = units.RAMInBytes(cgroupsSetting.memoryString)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var memoryReservation int64
+	if cgroupsSetting.memoryReservation != "" {
+		memoryReservation, err = units.RAMInBytes(cgroupsSetting.memoryReservation)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var memorySwap int64
+	if cgroupsSetting.memorySwap != "" {
+		if cgroupsSetting.memorySwap == "-1" {
+			memorySwap = -1
+		} else {
+			memorySwap, err = units.RAMInBytes(cgroupsSetting.memorySwap)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	var kernelMemory int64
+	if cgroupsSetting.kernelMemory != "" {
+		kernelMemory, err = units.RAMInBytes(cgroupsSetting.kernelMemory)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	swappiness := cgroupsSetting.swappiness
+	if swappiness != -1 && (swappiness < 0 || swappiness > 100) {
+		return nil, fmt.Errorf("invalid value: %d. Valid memory swappiness range is 0-100", swappiness)
+	}
+
+	resources := &pb.Resources{
+		CgroupParent:       cgroupsSetting.cgroupParent,
+		Memory:             memory,
+		MemoryReservation:  memoryReservation,
+		MemorySwap:         memorySwap,
+		MemorySwappiness:   swappiness,
+		KernelMemory:       kernelMemory,
+		OomKillDisable:     cgroupsSetting.oomKillDisable,
+		CPUShares:          cgroupsSetting.cpuShares,
+		CPUPeriod:          cgroupsSetting.cpuPeriod,
+		CpusetCpus:         cgroupsSetting.cpusetCpus,
+		CpusetMems:         cgroupsSetting.cpusetMems,
+		CPUQuota:           cgroupsSetting.cpuQuota,
+		CPURealtimePeriod:  cgroupsSetting.cpuRealtimePeriod,
+		CPURealtimeRuntime: cgroupsSetting.cpuRealtimeRuntime,
+	}
+
+	return resources, nil
+}
+

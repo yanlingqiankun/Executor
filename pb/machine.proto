@@ -14,6 +14,7 @@ message CreateMachineReq {
     map<string, PortBindings> exposed_ports = 7; // 端口映射
     Network network = 8;
     repeated MachineVolume volumes = 9;
+    Resources resources = 10;
 }
 
 message PortBinding {
@@ -137,4 +138,54 @@ message MachineVolume {
     string source = 2;                  // host内的路径，当路径为空时则自动在volume目录下创建一个卷
     string destination = 3;             // machine内的挂载路径
     bool readonly = 4;                  // 是否使用只读模式
+}
+
+// device:weight pair
+message WeightDevice {
+    string Path = 1;
+    uint32 Weight = 2;
+}
+
+// device:rate_per_second pair
+message ThrottleDevice {
+    string Path = 1;
+    uint64 Rate = 2;
+}
+
+// DeviceMapping 表示宿主机与容器之间 device 的映射
+message DeviceMapping {
+    string PathOnHost = 1;
+    string PathInContainer = 2;
+    string CgroupPermissions = 3;
+}
+
+message Resources {
+    int64 CPUShares = 1; // CPU shares (与其他容器的相对权重)
+    int64 Memory = 2;    // 内存限制 单位 bytes
+    int64 NanoCPUs = 3;  //  CPU quota
+
+    string CgroupParent = 4; // cgroup 的层级路径 可以为空
+    uint32 BlkioWeight = 5;  // 相对于其他容器的 Blkio 权重
+
+    repeated WeightDevice BlkioWeightDevice = 6;       // device:weight pairs
+    repeated ThrottleDevice BlkioDeviceReadBps = 7;    // read 速率上限 单位 bytes
+    repeated ThrottleDevice BlkioDeviceWriteBps = 8;   // write 速率上限 单位 bytes
+    repeated ThrottleDevice BlkioDeviceReadIOps = 9;   // read 速率上限 以每秒 IO 为单位指定
+    repeated ThrottleDevice BlkioDeviceWriteIOps = 10; // write 速率上限 以每秒 IO 为单位指定
+
+    int64 CPUPeriod = 11;                // 给 hardcap 使用的 CPU 周期 单位微秒
+    int64 CPUQuota = 12;                 // CPU hardcap limit 单位微秒, 在对给定的周期中允许的时间
+    int64 CPURealtimePeriod = 13;        // 实时调度时间 单位微秒
+    int64 CPURealtimeRuntime = 14;       // 被用来调度的实时 CPU 周期
+    string CpusetCpus = 15;              // 在 cpuset 中使用的参数, 默认是可以访问任意 CPU
+    string CpusetMems = 16;              // cpuset 中的内存节点列表。默认为使用任何可用的内存节点。
+    repeated DeviceMapping Devices = 17; // 宿主机与容器 Devices 的映射列表
+    int64 DiskQuota = 18;                // Disk limit 单位 bytes
+    int64 KernelMemory = 19;             // Kernel memory limit 单位 bytes
+    int64 KernelMemoryTCP = 20;          // 内核给使用 tcp 内存的限制 单位 byte
+    int64 MemoryReservation = 21;        // Memory 软 limit 单位 bytes
+    int64 MemorySwap = 22;               // memory + swap 的内存限制; -1 表示不限制
+    int64 MemorySwappiness = 23;         // 用来调整容器内存交换的参数
+    bool OomKillDisable = 24;            // 是否关闭 OOM kill
+    int64 PidsLimit = 25;                // 容器 pid limit
 }

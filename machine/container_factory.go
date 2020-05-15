@@ -2,7 +2,7 @@ package machine
 
 import (
 	"context"
-	"github.com/docker/docker/api/types/container"
+	docker "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/yanlingqiankun/Executor/network/proxy"
 	"time"
@@ -20,7 +20,7 @@ func CreateContainer(imageID string) Factory {
 			Name:          "",
 			RuntimeConfig: &RuntimeConfig{},
 		},
-		ContainerConfig: &container.Config{
+		ContainerConfig: &docker.Config{
 			Hostname:        "",
 			Domainname:      "",
 			User:            "",
@@ -47,13 +47,13 @@ func CreateContainer(imageID string) Factory {
 			StopTimeout:     nil,
 			Shell:           nil,
 		},
-		HostConfig: &container.HostConfig{
+		HostConfig: &docker.HostConfig{
 			Binds:           nil,
 			ContainerIDFile: "",
-			LogConfig:       container.LogConfig{},
+			LogConfig:       docker.LogConfig{},
 			NetworkMode:     "none",
 			PortBindings:    nil,
-			RestartPolicy:   container.RestartPolicy{},
+			RestartPolicy:   docker.RestartPolicy{},
 			AutoRemove:      false,
 			VolumeDriver:    "",
 			VolumesFrom:     nil,
@@ -83,7 +83,7 @@ func CreateContainer(imageID string) Factory {
 			Runtime:         "",
 			ConsoleSize:     [2]uint{},
 			Isolation:       "",
-			Resources:       container.Resources{},
+			Resources:       docker.Resources{},
 			Mounts:          nil,
 			MaskedPaths:     nil,
 			ReadonlyPaths:   nil,
@@ -225,4 +225,8 @@ func (container *BaseContainer) SetTTYSize(width, height uint16) {
 func (container *BaseContainer) GetBase() (*Base, error) {
 	container.Base.CreateTime = time.Now()
 	return container.Base, nil
+}
+
+func (container *BaseContainer) SetCgroups(res docker.Resources) {
+	container.HostConfig.Resources = res
 }
