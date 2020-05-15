@@ -61,15 +61,6 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 	factory.SetEnv(req.Env)
 	factory.SetWorkingDir(req.WorkingDir)
 
-	//resources, err := getMachineResources(req.Resources)
-	//if err != nil {
-	//	return &pb.CreateContainerResp{Err: newErr(1, err)}, err
-	//}
-	//factory.SetCgroups(island.CgroupsConfig{
-	//	CgroupsPath:    req.Resources.CgroupParent,
-	//	LinuxResources: resources,
-	//})
-	fmt.Println(req.Resources)
 	if req.Resources != nil {
 		resources, err := getMachineResources(req.Resources)
 		if err != nil {
@@ -80,9 +71,15 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 
 	if req.Network != nil {
 		factory.SetHostname(req.Network.Hostname)
-		factory.SetHosts(convertHostsFromPB(req.Network.ExtraHosts))
+		hosts := make([]string, 0)
 		machineInterface := make([]*machine.Network, len(req.Network.Interfaces))
 		for index, i := range req.Network.Interfaces {
+			tempHosts, err := network.GetHosts(i.Bridge)
+			if err != nil {
+				logger.WithError(err).Error("failed to get hosts")
+				return "", err
+			}
+			hosts = append(hosts, tempHosts...)
 			prefix, err := network.GetPrefix(i.Bridge)
 			if err != nil {
 				return "", err
@@ -121,6 +118,8 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 			}
 		}
 		factory.SetNetworks(machineInterface)
+		hosts = append(hosts, convertHostsFromPB(req.Network.ExtraHosts)...)
+		factory.SetHosts(hosts)
 	}
 
 	if req.Volumes != nil {
@@ -194,11 +193,6 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 		factory.SetExposedPorts(proxies)
 	}
 
-	//if container, err := factory.Save(); err != nil {
-	//	return &pb.CreateContainerResp{Err: newErr(1, err)}, err
-	//} else {
-	//	return &pb.CreateContainerResp{Id: container.GetID()}, nil
-	//}
 	err = factory.Create()
 	if err != nil {
 		logger.WithError(err).Error("failed to create the machine")

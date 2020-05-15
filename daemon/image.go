@@ -11,13 +11,18 @@ import (
 const TIME_LAYOUT = "2006-01-02 15:04:05.999999999 -0700 MST"
 
 func (s server) ImportImage(ctx context.Context, req *pb.ImportImageReq) (*pb.ImportImageResp, error) {
-	return importImage(req)
+	result, err := importImage(req)
+	if err != nil {
+		logger.WithError(err).Errorf("failed to import image")
+		return nil, err
+	}
+	return result, err
 }
 
 func importImage (req *pb.ImportImageReq) (*pb.ImportImageResp, error) {
 	var id string
 	var err error
-	if req.Type == "vm-iso" || req.Type == "docker-pull" || req.Type == "docker-repo" || req.Type == "vm-disk"{
+	if req.Type == "vm-iso" || req.Type == "docker-pull" || req.Type == "docker-repo" || req.Type == "vm-disk" || req.Type == "docker-import"{
 		if req.Type == "vm-iso" {
 			id, err = image.QEMUImageSave(req.Name, "iso", req.Path)
 		} else if req.Type == "vm-disk" {
@@ -26,6 +31,8 @@ func importImage (req *pb.ImportImageReq) (*pb.ImportImageResp, error) {
 			id, err = image.PullDockerImage(context.Background(), req.Name)
 		} else if req.Type == "docker-repo" {
 			id, err = image.GetImageFromDocker(req.Name)
+		} else if req.Type == "docker-import" {
+			id, err = image.ImportDocekrImage(context.Background(), req.Name, req.Path)
 		}
 		if err != nil {
 			return &pb.ImportImageResp{

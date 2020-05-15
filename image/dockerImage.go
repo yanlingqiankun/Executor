@@ -7,25 +7,29 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/yanlingqiankun/Executor/conf"
 	"io"
+	"os"
 	"strings"
 	"time"
 )
 
-//func importDocekrImage(ctx context.Context, name, tag, file string) error {
-//	fileReader, err := os.Open(file)
-//	if err != nil {
-//		return err
-//	}
-//	imageImportSource := types.ImageImportSource{
-//		Source:     fileReader,
-//		SourceName: name,
-//	}
-//	out, err := cli.ImageImport(ctx, imageImportSource, "", types.ImageImportOptions{Tag:tag})
-//	if err != nil {
-//		return err
-//	}
-//	return out.Close()
-//}
+func ImportDocekrImage(ctx context.Context, name, file string) (string, error) {
+	fileReader, err := os.Open(file)
+	if err != nil {
+		logger.WithError(err).Errorf("failed to open image")
+		return "", err
+	}
+	imageImportSource := types.ImageImportSource{
+		Source:     fileReader,
+		SourceName: "-",
+	}
+	out, err := cli.ImageImport(ctx, imageImportSource, name, types.ImageImportOptions{})
+	if err != nil {
+		logger.WithError(err).Errorf("failed import docker image")
+		return "", err
+	}
+	out.Close()
+	return GetImageFromDocker(name)
+}
 //
 //func SaveDockerImage(ctx context.Context, name, file string) error {
 //	fileReader, err := os.Open(file)

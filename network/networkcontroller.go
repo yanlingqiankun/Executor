@@ -379,11 +379,6 @@ func ReleaseIP(netname string, VMName string, ipaddr net.IP) error {
 	return nil
 }
 
-func SetRoute() (err error) {
-	panic("set route")
-	return
-}
-
 func GetPrefix(netname string) (int, error) {
 	nw, ok := networks[netname]
 	if !ok {
@@ -401,19 +396,31 @@ func GetGateWay(netname string) (string, error) {
 	return nw.GateWay.String(), nil
 }
 
-//func Restart(netname string) error {
-//	_, ok := networks[netname]
-//	if !ok {
-//		return fmt.Errorf("The network is not exists")
-//	}
-//
-//	libnet, err := libconn.LookupNetworkByName(netname)
-//	if err != nil {
-//		return err
-//	}
-//	defer libnet.Free()
-//	if ok, _ := libnet.IsActive(); ok {
-//		libnet.Destroy()
-//	}
-//	return libnet.Create()
-//}
+func GetHosts(netname string) ([]string, error){
+	//check if the ip valid
+	_, ok := networks[netname]
+	if !ok {
+		return nil, fmt.Errorf("The network is not exists")
+	}
+
+	libnet, err := libconn.LookupNetworkByName(netname)
+	if err != nil {
+		return nil, err
+	}
+	defer libnet.Free()
+	xmlStr, err := libnet.GetXMLDesc(libvirt.NETWORK_XML_INACTIVE)
+	if err != nil {
+		return nil, err
+	}
+	netStruct :=  libvirtxml.Network{}
+	if err := xml.Unmarshal([]byte(xmlStr), &netStruct); err != nil {
+		return nil, err
+	}
+	hosts := make([]string, 0)
+	if netStruct.IPs[0].DHCP != nil {
+		for _, host := range netStruct.IPs[0].DHCP.Hosts {
+			hosts = append(hosts, host.Name + ":" + host.IP)
+		}
+	}
+	return hosts, nil
+}
