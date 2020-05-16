@@ -9,6 +9,7 @@ import (
 	"github.com/yanlingqiankun/Executor/conf"
 	"github.com/yanlingqiankun/Executor/logging"
 	"github.com/yanlingqiankun/Executor/stringid"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -174,7 +175,44 @@ func (image *ImageEntry) Export(target string) error {
 			return err
 		}
 	} else {
-		//cli.
+		var imageId = []string{image.Name+":latest"}
+		reader, err := cli.ImageSave(context.Background(), imageId)
+		if err != nil {
+			logger.WithError(err).Errorf("failed to copy image file to temp directory")
+			return err
+		}
+		out, err := os.Create(filepath.Join(tmpDir, "image"))
+		if err != nil {
+			logger.WithError(err).Errorf("failed to copy image file to temp directory")
+			return err
+		}
+		defer out.Close()
+		_, err = io.Copy(out, reader)
+		if err != nil {
+			return err
+		}
+	}
+	imageStruct := importStruct{
+		Type: image.Type,
+		Name: image.Name,
+	}
+	file, err := os.OpenFile(filepath.Join(tmpDir, "config"), os.O_TRUNC | os.O_WRONLY | os.O_CREATE, 0600)
+	defer file.Close()
+	if err != nil {
+		logger.WithError(err).Errorf("failed to copy image file to temp directory")
+		return err
+	}
+	imageJson, err := json.Marshal(imageStruct)
+	if err != nil {
+		logger.WithError(err).Errorf("failed to copy image file to temp directory")
+		return err
+	}
+	_, err = file.Write(imageJson)
+
+	err = tarDir(tmpDir, target)
+	if err != nil {
+		logger.WithError(err).Errorf("failed to tar the image")
+		return err
 	}
 	return nil
 }
@@ -261,7 +299,7 @@ func ImportImage (path string) (string, error) {
 	if imageConfig.Type == "disk" || imageConfig.Type == "iso"{
 		return QEMUImageSave(imageConfig.Name, imageConfig.Type, filepath.Join(tmpDir, "image"))
 	} else if imageConfig.Type == "docker" {
-		return ImportDocekrImage(context.Background(), imageConfig.Name, filepath.Join(tmpDir, "image"))
+		return ImportSaveDockerImage(context.Background(), filepath.Join(tmpDir, "image"))
 	} else {
 		return "", errors.New("invalid image type to import")
 	}

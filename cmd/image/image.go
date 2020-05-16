@@ -16,7 +16,7 @@ func GetImageCmd() *cobra.Command {
 		GetImageListCmd(),
 		GetImageImportCmd(),
 		GetImageDeleteCmd(),
-		//GetImageExportCmd(),
+		GetImageExportCmd(),
 	)
 	return imageCmd
 }

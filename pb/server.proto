@@ -29,6 +29,8 @@ service Executor {
     rpc ListImage(google.protobuf.Empty) returns (ListImageResp) {}
     // 删除image
     rpc DeleteImage(DeleteImageReq) returns (DeleteImageResp) {}
+    // export image
+    rpc ExportImage(ExportImageReq) returns (Error) {}
 
     // machine
     

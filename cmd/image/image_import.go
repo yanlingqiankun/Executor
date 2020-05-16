@@ -20,7 +20,7 @@ func GetImageImportCmd() *cobra.Command {
 		Args:  cobra.MinimumNArgs(0),
 		Run:   importHandle,
 	}
-	imageImportCmd.Flags().StringVar(&imageType, "type", "", "image type : vm-iso vm-disk docker-pull docker-repo docker-import docker-save")
+	imageImportCmd.Flags().StringVar(&imageType, "type", "", "image type : vm-iso vm-disk docker-pull docker-repo docker-import docker-save raw")
 	imageImportCmd.Flags().StringVar(&name, "name", "", "image name in repo")
 	return imageImportCmd
 }
@@ -33,7 +33,7 @@ func importHandle(cmd *cobra.Command, args []string) {
 	}
 
 	if name == "" {
-		if imageType != "docker-save" {
+		if imageType != "docker-save" && imageType != "raw" {
 			_ = cmd.Help()
 			return
 		}

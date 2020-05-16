@@ -36,3 +36,8 @@ message DeleteImageReq {
 message DeleteImageResp {
     Error err = 1;
 }
+
+message ExportImageReq {
+    string id = 1;
+    string target = 2;
+}

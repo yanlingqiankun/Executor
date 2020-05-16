@@ -34,7 +34,7 @@ func ImportDocekrImage(ctx context.Context, name, file string) (string, error) {
 	return GetImageFromDocker(name)
 }
 
-func SaveDockerImage(ctx context.Context, path string) (string, error) {
+func ImportSaveDockerImage(ctx context.Context, path string) (string, error) {
 	// if file not exist
 	if !exists(path) {
 		logger.Errorf("can't find the file : %s", path)
@@ -77,6 +77,7 @@ func SaveDockerImage(ctx context.Context, path string) (string, error) {
 		}
 		name = nameAndTag[0]
 	}
+	logger.Info("get image name : ", name)
 	fileReader, err := os.Open(path)
 	if err != nil {
 		return "", err

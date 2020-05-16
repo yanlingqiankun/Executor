@@ -22,7 +22,7 @@ func (s server) ImportImage(ctx context.Context, req *pb.ImportImageReq) (*pb.Im
 func importImage (req *pb.ImportImageReq) (*pb.ImportImageResp, error) {
 	var id string
 	var err error
-	if req.Type == "vm-iso" || req.Type == "docker-pull" || req.Type == "docker-repo" || req.Type == "vm-disk" || req.Type == "docker-import" || req.Type == "docker-save"{
+	if req.Type == "vm-iso" || req.Type == "docker-pull" || req.Type == "docker-repo" || req.Type == "vm-disk" || req.Type == "docker-import" || req.Type == "docker-save" || req.Type == "raw"{
 		if req.Type == "vm-iso" {
 			id, err = image.QEMUImageSave(req.Name, "iso", req.Path)
 		} else if req.Type == "vm-disk" {
@@ -34,7 +34,9 @@ func importImage (req *pb.ImportImageReq) (*pb.ImportImageResp, error) {
 		} else if req.Type == "docker-import" {
 			id, err = image.ImportDocekrImage(context.Background(), req.Name, req.Path)
 		} else if req.Type == "docker-save" {
-			id, err = image.SaveDockerImage(context.Background(), req.Path)
+			id, err = image.ImportSaveDockerImage(context.Background(), req.Path)
+		} else if req.Type == "raw" {
+			id, err = image.ImportImage(req.Path)
 		} else {
 			err = fmt.Errorf("can't support image type : %s", req.Type)
 		}
@@ -115,4 +117,23 @@ func deleteImage(id string) error {
 		return err
 	}
 	return img.Remove()
+}
+
+func (s server) ExportImage(ctx context.Context, req *pb.ExportImageReq) (*pb.Error, error) {
+	err := exportImage(req.Id, req.Target)
+	if err != nil {
+		logger.WithError(err).Errorf("failed to export image %s ", req.Id)
+		return newErr(1, err), err
+	} else {
+		logger.Debugf("image %s has been exported", req.Id)
+		return newErr(0, err), nil
+	}
+}
+
+func exportImage(id, target string) error {
+	img, err := image.OpenImage(id)
+	if err != nil {
+		return err
+	}
+	return img.Export(target)
 }
