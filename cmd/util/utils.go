@@ -28,7 +28,7 @@ func PrintError(err *pb.Error) bool {
 		if err.Code == 0 {
 			return false
 		}
-		fmt.Printf("[ERR %d] %s", err.Code, err.Message)
+		fmt.Printf("[ERR %d] %s\n", err.Code, err.Message)
 		return true
 	}
 }

@@ -33,7 +33,7 @@ var libconn *libvirt.Connect
 
 func init() {
 	var err error
-	networkPath := filepath.Join(conf.GetString("RootPath"), "Excutor-net")
+	networkPath := filepath.Join(conf.GetString("RootPath"), "network")
 	//defaultNetworkPath = filepath.Join(networkPath, "Network")
 	defaultNetworkPath = filepath.Join(networkPath, "network")
 	ipAllocator.SubnetAllocatorPath = filepath.Join(networkPath, "IPAM")

@@ -21,4 +21,5 @@ type Image interface {
 	UnRegister()
 	GetPath() string
 	GetName() string
+	Export(string) error
 }

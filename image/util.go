@@ -29,3 +29,11 @@ func returnWithError(info string, err error) {
 		logger.WithError(err).Error(info)
 	}
 }
+
+func exists(filePath string) bool {
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return false
+	}
+
+	return true
+}

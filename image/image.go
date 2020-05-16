@@ -1,7 +1,9 @@
 package image
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/docker/docker/client"
 	"github.com/yanlingqiankun/Executor/conf"
@@ -153,6 +155,30 @@ func (image *ImageEntry) UnRegister() {
 	db.unRegister(image.ID)
 }
 
+func (image *ImageEntry) Export(target string) error {
+	tmpDir, err := ioutil.TempDir(conf.GetString("Temp"), "")
+	if err != nil {
+		logger.Error("failed to create temporary folder")
+		return err
+	}
+	defer func() {
+		if os.RemoveAll(tmpDir) != nil {
+			logger.WithField("path", tmpDir).Error("failed to remove temporary folder")
+		}
+	}()
+
+	if image.Type == "iso" || image.Type == "disk"{
+		err := copy(image.GetPath(), filepath.Join(tmpDir, "image"))
+		if err != nil {
+			logger.WithError(err).Errorf("failed to copy image file to temp directory")
+			return err
+		}
+	} else {
+		//cli.
+	}
+	return nil
+}
+
 
 //被machine使用之前要先进行注册
 func (db imageDB) register(id string) error {
@@ -178,7 +204,6 @@ func (db imageDB) unRegister(id string) error {
 	return fmt.Errorf("The image not exist")
 }
 
-
 func GetImageType(imageID string) string {
 	if image, ok := db[imageID]; ok {
 		return image.Type
@@ -198,4 +223,61 @@ func CheckNameOrID (args string) string {
 		}
 	}
 	return ""
+}
+
+type importStruct struct {
+	Type string
+	Name string
+}
+
+func ImportImage (path string) (string, error) {
+	// if file not exist
+	if !exists(path) {
+		logger.Errorf("can't find the file : %s", path)
+		return "", fmt.Errorf("can't find the file : %s", path)
+	}
+
+	tmpDir, err := ioutil.TempDir(conf.GetString("Temp"), "")
+	if err != nil {
+		logger.Error("failed to create temporary folder")
+		return "", err
+	}
+	defer func() {
+		if os.RemoveAll(tmpDir) != nil {
+			logger.WithField("path", tmpDir).Error("failed to remove temporary folder")
+		}
+	}()
+	if err := unTar(path, tmpDir, "tar"); err != nil {
+		logger.WithField("error", err).Error("untar failed")
+		return "", err
+	} else {
+		logger.Debug("untar success")
+	}
+	imageConfig, err := getImportStruct(filepath.Join(tmpDir, "config"))
+	if err != nil {
+		logger.WithError(err).Errorf("failed to get image configure file")
+		return "", nil
+	}
+	if imageConfig.Type == "disk" || imageConfig.Type == "iso"{
+		return QEMUImageSave(imageConfig.Name, imageConfig.Type, filepath.Join(tmpDir, "image"))
+	} else if imageConfig.Type == "docker" {
+		return ImportDocekrImage(context.Background(), imageConfig.Name, filepath.Join(tmpDir, "image"))
+	} else {
+		return "", errors.New("invalid image type to import")
+	}
+}
+
+func getImportStruct(filename string) (importStruct, error){
+	result := importStruct{}
+	if data, err := ioutil.ReadFile(filename); err != nil {
+		logger.WithField("file", filename).Error("failed to open the file for parsing")
+		return importStruct{}, err
+	} else {
+		if err = json.Unmarshal(data, &result); err != nil {
+			logger.WithError(err).Error("an error occurs while parsing the image configure file")
+			return importStruct{}, err
+		} else {
+			return result, nil
+		}
+	}
 }

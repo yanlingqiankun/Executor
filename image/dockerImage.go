@@ -3,11 +3,14 @@ package image
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/yanlingqiankun/Executor/conf"
 	"io"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -30,23 +33,87 @@ func ImportDocekrImage(ctx context.Context, name, file string) (string, error) {
 	out.Close()
 	return GetImageFromDocker(name)
 }
-//
-//func SaveDockerImage(ctx context.Context, name, file string) error {
-//	fileReader, err := os.Open(file)
-//	if err != nil {
-//		return err
-//	}
-//	resp, err := cli.ImageLoad(ctx, fileReader, true)
-//	if err != nil {
-//		return err
-//	}
-//	fmt.Println(resp.JSON)
-//	buf := bytes.Buffer{}
-//	defer resp.Body.Close()
-//	io.Copy(&buf, resp.Body)
-//	logger.Infoln("docker save infomation : \n", buf.String())
-//	return nil
-//}
+
+func SaveDockerImage(ctx context.Context, path string) (string, error) {
+	// if file not exist
+	if !exists(path) {
+		logger.Errorf("can't find the file : %s", path)
+		return "", fmt.Errorf("can't find the file : %s", path)
+	}
+
+	logger.WithField("image", path).Info("start importing docker image")
+	tmpDir, err := ioutil.TempDir(conf.GetString("Temp"), "")
+	if err != nil {
+		logger.Error("failed to create temporary folder")
+		return "", nil
+	}
+	defer func() {
+		if os.RemoveAll(tmpDir) != nil {
+			logger.WithField("path", tmpDir).Error("failed to remove temporary folder")
+		}
+	}()
+
+	// 把docker镜像解压到临时目录然后进行解析
+	logger.Debug("untar docker image to " + tmpDir)
+	if err := unTar(path, tmpDir, "tar"); err != nil {
+		logger.WithField("error", err).Error("untar failed")
+	} else {
+		logger.Debug("untar success")
+	}
+
+	manifest, err := parseDockerManifest(filepath.Join(tmpDir, "manifest.json"))
+	if err != nil {
+		return "", err
+	}
+	var name string
+	if manifest.RepoTags != nil && len(manifest.RepoTags) > -1 {
+		repo := manifest.RepoTags[0]
+		nameAndTag := strings.Split(repo, ":")
+		if len(nameAndTag) > 1 {
+			if nameAndTag[1] != "latest" {
+				logger.Errorf("not support docker image with tag : %s", nameAndTag[1])
+				return "",fmt.Errorf("not support docker image with tag : %s", nameAndTag[1])
+			}
+		}
+		name = nameAndTag[0]
+	}
+	fileReader, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	resp, err := cli.ImageLoad(ctx, fileReader, true)
+	if err != nil {
+		return "", err
+	}
+	resp.Body.Close()
+	logger.Debugf("%s has load to docker repo", name)
+	return GetImageFromDocker(name)
+}
+
+type dockerManifest struct {
+	Config   string
+	RepoTags []string
+	Layers   []string
+}
+
+func parseDockerManifest(filename string) (dockerManifest, error) {
+	logger.WithField("file", filename).Debug("start parsing manifest")
+	var manifest []dockerManifest
+	if data, err := ioutil.ReadFile(filename); err != nil {
+		logger.WithField("file", filename).Error("failed to open the file for parsing")
+		return dockerManifest{}, err
+	} else {
+		if err = json.Unmarshal(data, &manifest); err != nil {
+			logger.WithError(err).Error("an error occurs while parsing the docker manifest")
+			return dockerManifest{}, err
+		} else {
+			if len(manifest) == 1 {
+				return manifest[0], nil
+			}
+			return dockerManifest{}, fmt.Errorf("invalid docker manifest format")
+		}
+	}
+}
 
 func PullDockerImage(ctx context.Context, name string) (string, error) {
 	id := CheckNameOrID(name)

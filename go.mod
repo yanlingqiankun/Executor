@@ -5,18 +5,15 @@ go 1.13
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/BurntSushi/toml v0.3.1
-	github.com/Microsoft/go-winio v0.4.14 // indirect
+	github.com/Microsoft/hcsshim v0.8.9 // indirect
 	github.com/containerd/containerd v1.3.3 // indirect
+	github.com/containerd/continuity v0.0.0-20200413184840-d3ef23f19fbb
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-connections v0.4.0 // indirect
-	github.com/docker/go-units v0.4.0 // indirect
-	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
-	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/protobuf v1.3.5
 	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
-	github.com/kr/pretty v0.1.0 // indirect
 	github.com/libvirt/libvirt-go v6.1.0+incompatible
 	github.com/libvirt/libvirt-go-xml v6.1.0+incompatible
 	github.com/mattn/go-colorable v0.1.6 // indirect
@@ -24,9 +21,7 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.12.0 // indirect
 	github.com/onsi/gomega v1.9.0 // indirect
-	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
-	github.com/opencontainers/runtime-spec v1.0.2
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sirupsen/logrus v1.5.0
 	github.com/vishvananda/netlink v1.1.0
@@ -38,8 +33,6 @@ require (
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	google.golang.org/genproto v0.0.0-20200401122417-09ab7b7031d2 // indirect
 	google.golang.org/grpc v1.28.0
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
-	gotest.tools v2.2.0+incompatible // indirect
 )
 
 replace github.com/docker/docker v1.13.1 => github.com/docker/engine v0.0.0-20191113042239-ea84732a7725

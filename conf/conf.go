@@ -13,6 +13,7 @@ type configType struct {
 	StoreNode	  string
 	DockerRegistryPort 	string
 	VMType        string
+	Temp          string
 }
 
 // 默认配置
@@ -23,12 +24,13 @@ var sysConfig = configType{
 	StoreNode:     "127.0.0.1",
 	DockerRegistryPort: "5000",
 	VMType:        "kvm",
+	Temp:          "",
 }
 
 var logger = logging.GetLogger("conf")
 
 func init() {
-	configFilePath := "/media/shado/Downloads/code/goCode/Executor/Executor.conf"
+	configFilePath := "Executor.conf"
 	if _, err := toml.DecodeFile(configFilePath, &sysConfig); err != nil {
 		logger.WithError(err).WithField("path", configFilePath).Fatal("failed to load configurations")
 	} else {

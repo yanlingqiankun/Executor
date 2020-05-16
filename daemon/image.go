@@ -22,7 +22,7 @@ func (s server) ImportImage(ctx context.Context, req *pb.ImportImageReq) (*pb.Im
 func importImage (req *pb.ImportImageReq) (*pb.ImportImageResp, error) {
 	var id string
 	var err error
-	if req.Type == "vm-iso" || req.Type == "docker-pull" || req.Type == "docker-repo" || req.Type == "vm-disk" || req.Type == "docker-import"{
+	if req.Type == "vm-iso" || req.Type == "docker-pull" || req.Type == "docker-repo" || req.Type == "vm-disk" || req.Type == "docker-import" || req.Type == "docker-save"{
 		if req.Type == "vm-iso" {
 			id, err = image.QEMUImageSave(req.Name, "iso", req.Path)
 		} else if req.Type == "vm-disk" {
@@ -33,6 +33,10 @@ func importImage (req *pb.ImportImageReq) (*pb.ImportImageResp, error) {
 			id, err = image.GetImageFromDocker(req.Name)
 		} else if req.Type == "docker-import" {
 			id, err = image.ImportDocekrImage(context.Background(), req.Name, req.Path)
+		} else if req.Type == "docker-save" {
+			id, err = image.SaveDockerImage(context.Background(), req.Path)
+		} else {
+			err = fmt.Errorf("can't support image type : %s", req.Type)
 		}
 		if err != nil {
 			return &pb.ImportImageResp{
