@@ -152,6 +152,9 @@ func PullDockerImage(ctx context.Context, name string) (string, error) {
 }
 
 func GetImageFromDocker(name string) (string, error) {
+	if temp := CheckNameOrID(name);temp != "" {
+		return "", fmt.Errorf("The image has be in the image repo")
+	}
 	id, _ := getDockerImageID(name)
 	if id == "" {
 		return "", fmt.Errorf("can't find %s in docker repo", name)

@@ -189,3 +189,13 @@ message Resources {
     bool OomKillDisable = 24;            // 是否关闭 OOM kill
     int64 PidsLimit = 25;                // 容器 pid limit
 }
+
+message CommitMachineReq {
+    string id = 1;
+    string name = 2;
+}
+
+message CommitMachineResp {
+    string id = 1;
+    Error err = 2;
+}

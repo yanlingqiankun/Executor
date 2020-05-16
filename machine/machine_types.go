@@ -20,6 +20,7 @@ type Machine interface {
 	GetStdio(string) (chan []byte, chan []byte, chan []byte, error) // stdin, stdout, stderr
 	GetState() string               // get machine state
 	Inspect() (name string, runtimeSetting string, spec string, machineType string, err error)
+	Commit(name string) (string, error)
 }
 
 type Factory interface {

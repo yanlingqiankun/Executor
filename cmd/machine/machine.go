@@ -23,6 +23,7 @@ func GetMachineCmd() *cobra.Command {
 		GetAttachCmd(),
 		GetMachinePauseCmd(),
 		GetMachineUnpauseCmd(),
+		GetMachineCommitCmd(),
 	)
 	return machineCmd
 }

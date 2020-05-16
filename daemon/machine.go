@@ -423,3 +423,30 @@ func unpauseMachine(id string) error {
 	}
 	return m.Unpause()
 }
+
+func (s server) CommitMachine(ctx context.Context, req *pb.CommitMachineReq) (*pb.CommitMachineResp, error) {
+	if id, err := commitMachine(req.Name, req.Id); err != nil {
+		return &pb.CommitMachineResp{
+			Id:                   "",
+			Err:                  newErr(1, err),
+		}, err
+	} else {
+		return &pb.CommitMachineResp{
+			Id:                   id,
+			Err:                  newErr(0, err),
+		}, err
+	}
+}
+
+func commitMachine (name, id string) (string, error) {
+	m, err := machine.GetMachine(id)
+	if err != nil {
+		logger.WithError(err).Error("failed to get get machine")
+		return "", err
+	}
+	if image.CheckExist(name) {
+		logger.Errorf("the image %s has be in the image repo", name)
+		return "", fmt.Errorf("the image %s has be in the image repo", name)
+	}
+	return m.Commit(name)
+}

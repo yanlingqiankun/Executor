@@ -296,7 +296,7 @@ func (VM *BaseVM) SetNetworks(networks []*Network) {
 }
 
 func (VM *BaseVM) SetRoutes([]*Route) {
-	panic("implement me")
+	return
 }
 
 func (VM *BaseVM) SetCgroups(res container.Resources) {

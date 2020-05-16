@@ -3,6 +3,7 @@ package machine
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -11,6 +12,7 @@ import (
 	libvirtxml "github.com/libvirt/libvirt-go-xml"
 	"github.com/vishvananda/netns"
 	"github.com/yanlingqiankun/Executor/conf"
+	"github.com/yanlingqiankun/Executor/image"
 	"github.com/yanlingqiankun/Executor/logging"
 	"github.com/yanlingqiankun/Executor/network"
 	"github.com/yanlingqiankun/Executor/network/proxy"
@@ -405,5 +407,36 @@ func (m *Base) Inspect() (name string, runtimeSetting string, spec string, machi
 		machineType = "vm"
 	}
 	return
+}
+
+func (m *Base) Commit(name string) (string, error) {
+	var id string
+	var err error
+	if m.ImageType == "iso" {
+		logger.Errorf("can't commit machine base on iso image")
+		return "", errors.New("can't commit machine base on iso image")
+	} else if m.ImageType == "disk" {
+		// vm-disk file
+		id, err = image.QEMUImageSave(name, "disk", m.ImagePath)
+		if err != nil {
+			logger.WithError(err).Errorf("failed to commit disk machine")
+			return "", err
+		}
+	} else if m.ImageType == "docker" {
+		_, err := cli.ContainerCommit(context.Background(), m.ID, types.ContainerCommitOptions{
+			Reference: name + ":latest",
+		})
+		if err != nil {
+			logger.WithError(err).Errorf("failed to commit docker machine")
+			return "", err
+		}
+		id, err = image.GetImageFromDocker(name)
+		if err != nil {
+			logger.WithError(err).Errorf("failed to commit docker machine")
+			return "", err
+		}
+	}
+	logger.Debugf("the image which id is %s has been committed", id)
+	return id, nil
 }
 

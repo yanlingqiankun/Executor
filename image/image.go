@@ -319,3 +319,11 @@ func getImportStruct(filename string) (importStruct, error){
 		}
 	}
 }
+
+func CheckExist(idOrName string) bool {
+	if temp := CheckNameOrID(idOrName);temp != "" {
+		return true
+	} else {
+		return false
+	}
+}

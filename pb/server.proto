@@ -58,6 +58,8 @@ service Executor {
     rpc PauseMachine (MachineIdReq) returns (Error) {}
     // 恢复machine
     rpc UnpauseMachine (MachineIdReq) returns (Error) {}
+    // commit machine
+    rpc CommitMachine (CommitMachineReq) returns (CommitMachineResp) {}
 
     // 重新定义machine伪终端长和宽
     rpc ResizeMachineTTY (ResizeTTYReq) returns (Error) {}
