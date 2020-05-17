@@ -20,6 +20,8 @@ service Executor {
     rpc InspectNetwork(NetworkInspectReq) returns (NetworkInspectResp) {}
     // 展示所有network
     rpc ListNetwork(google.protobuf.Empty) returns (NetworkListResp) {}
+    // connect network
+    rpc ConnectNetwork(NetworkConnectReq) returns (Error) {}
 
     // image
     

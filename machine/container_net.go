@@ -48,6 +48,9 @@ func (nw *Network) connectBridge(nns netns.NsHandle, index int) error {
 	}
 	// 创建 veth 接口的配置
 	linkAttrs := netlink.NewLinkAttrs()
+	if nw.HostInterfaceName == "" {
+		nw.HostInterfaceName = "veth" + stringid.GenerateRandomID()[:6] + strconv.Itoa(index)
+	}
 	linkAttrs.Name = nw.HostInterfaceName
 	linkAttrs.MasterIndex = br.Attrs().Index
 

@@ -21,6 +21,9 @@ type Machine interface {
 	GetState() string               // get machine state
 	Inspect() (name string, runtimeSetting string, spec string, machineType string, err error)
 	Commit(name string) (string, error)
+	ConnectNetWork(*Network) error
+
+	GetName() string
 }
 
 type Factory interface {

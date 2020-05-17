@@ -194,3 +194,14 @@ func stdoutContainerHandle(response *types.HijackedResponse, out chan []byte, st
 		}
 	}
 }
+
+func ContainerConnectNetwork(id string, network *Network) error {
+	item, exist:= db.getItem(id)
+	if !exist {
+		return fmt.Errorf("%s can't find in the machine repo")
+	}
+	c := item.machine
+	c.RuntimeConfig.Networks = append(c.RuntimeConfig.Networks, network)
+	db.save(true, id)
+	return nil
+}

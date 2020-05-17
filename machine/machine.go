@@ -440,3 +440,14 @@ func (m *Base) Commit(name string) (string, error) {
 	return id, nil
 }
 
+func (m *Base) ConnectNetWork(nw *Network) error {
+	if m.IsDocker {
+		return ContainerConnectNetwork(m.ID, nw)
+	} else {
+		return VMConnectNetwork(m.ID, nw)
+	}
+}
+
+func (m *Base) GetName() string {
+	return m.Name
+}

@@ -3,6 +3,7 @@ syntax = "proto3";
 package pb;
 
 import "pb/common.proto";
+import "pb/machine.proto";
 
 message NetworkName {
     string id = 1;
@@ -49,4 +50,10 @@ message NetworkInfo {
 message NetworkListResp {
     repeated NetworkInfo networks = 1;
     Error error = 2;
+}
+
+message NetworkConnectReq {
+    NetworkInterface interface = 1;
+    string name = 2;
+    string machine_id = 3;
 }

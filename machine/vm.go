@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/libvirt/libvirt-go"
 	libvirtxml "github.com/libvirt/libvirt-go-xml"
+	"github.com/yanlingqiankun/Executor/stringid"
+	"strconv"
 	"time"
 )
 
@@ -297,4 +299,53 @@ func stdoutVMHandle(stream *libvirt.Stream, out chan []byte, stderr chan []byte)
 			out <- data[:n]
 		}
 	}
+}
+
+func VMConnectNetwork(id string, nw *Network) error {
+	item, exist:= db.getItem(id)
+	if !exist {
+		return fmt.Errorf("%s can't find in the machine repo")
+	}
+	c := item.machine
+	i := len(c.RuntimeConfig.Networks)
+
+	deviceName := "eth" + stringid.GenerateRandomID()[:5] + strconv.Itoa(i)
+	if nw.Name != "" {
+		deviceName = nw.Name
+	}
+	domain, err := libconn.LookupDomainByUUIDString(id)
+	if err != nil {
+		return err
+	}
+	newNetStruct := libvirtxml.DomainInterface{
+		XMLName:             xml.Name{},
+		Managed:             "",
+		TrustGuestRXFilters: "",
+		MAC:                 &libvirtxml.DomainInterfaceMAC{Address:nw.MacAddress},
+		Source:              &libvirtxml.DomainInterfaceSource{
+			Network:   &libvirtxml.DomainInterfaceSourceNetwork{
+				Network:   nw.Bridge,
+			},
+		},
+		Route:               nil,
+		Target:              &libvirtxml.DomainInterfaceTarget{
+			Dev:     deviceName,
+		},
+	}
+	newNetString, err := newNetStruct.Marshal()
+	if err != nil {
+		logger.WithError(err).Errorf("failed to marshal network struct")
+		return err
+	}
+	err = domain.AttachDeviceFlags(newNetString, libvirt.DOMAIN_DEVICE_MODIFY_CONFIG)
+	if err != nil {
+		logger.WithError(err).Errorf("failed to attach device")
+		return err
+	}
+
+	c.RuntimeConfig.Networks = append(c.RuntimeConfig.Networks, nw)
+	db.save(true, id)
+
+
+	return nil
 }
