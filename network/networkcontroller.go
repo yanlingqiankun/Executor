@@ -184,9 +184,16 @@ func CreateNetwork(name, subnet, gateway string, isIsolated bool) error {
 		return fmt.Errorf("Warning", nw.Name, " exists")
 	}
 	if err := ipAllocator.register(cidr, gatewayIP); err != nil {
+		logger.WithError(err).Errorf("failed to create network %s", name)
+		DeleteNetwork(name, true)
 		return err
 	}
-	return nw.createBridge()
+	if err := nw.createBridge(); err != nil {
+		logger.WithError(err).Errorf("failed to create network %s", name)
+		DeleteNetwork(name, true)
+		return err
+	}
+	return nil
 }
 
 func ListNetwork() []*pb.NetworkInfo {
