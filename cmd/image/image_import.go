@@ -7,6 +7,7 @@ import (
 	"github.com/yanlingqiankun/Executor/cmd/connection"
 	utils "github.com/yanlingqiankun/Executor/cmd/util"
 	"github.com/yanlingqiankun/Executor/pb"
+	"path/filepath"
 )
 
 var imageType string
@@ -58,6 +59,13 @@ func importHandle(cmd *cobra.Command, args []string) {
 
 	var r *pb.ImportImageResp
 	var err error
+
+	dir, file := filepath.Split(path)
+	absDir, err := filepath.Abs(dir)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	path = filepath.Join(absDir, file)
 
 	r, err = connection.Client.ImportImage(context.Background(), &pb.ImportImageReq{
 		Path: path,

@@ -7,6 +7,7 @@ import (
 	"github.com/yanlingqiankun/Executor/cmd/connection"
 	utils "github.com/yanlingqiankun/Executor/cmd/util"
 	"github.com/yanlingqiankun/Executor/pb"
+	"path/filepath"
 )
 
 var target string
@@ -34,6 +35,12 @@ func imageExportHandle(cmd *cobra.Command, args []string) {
 }
 
 func exportImage(id string) {
+	dir, file := filepath.Split(target)
+	absDir, err := filepath.Abs(dir)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	target = filepath.Join(absDir, file)
 	id = CheckNameOrId(id)
 	r, err := connection.Client.ExportImage(context.Background(), &pb.ExportImageReq{Id: id, Target:target})
 	if err != nil {
