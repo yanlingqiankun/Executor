@@ -39,7 +39,9 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
+	if machine.CheckExist(req.Name) {
+		return "", fmt.Errorf("the machine named %s has be in the repo")
+	}
 	img.Register()
 	var factory machine.Factory
 	if isDocker, _ := img.GetType(); isDocker{
@@ -52,6 +54,7 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 		req.Name = "m"+ stringid.GenerateRandomID()[:11]
 	}
 	if err := factory.SetName(req.Name); err != nil {
+		img.UnRegister()
 		return "", err
 	}
 	//factory.SetImage(image.MountPoint())
@@ -64,6 +67,7 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 	if req.Resources != nil {
 		resources, err := getMachineResources(req.Resources)
 		if err != nil {
+			img.UnRegister()
 			return "", err
 		}
 		factory.SetCgroups(resources)
@@ -77,15 +81,18 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 			tempHosts, err := network.GetHosts(i.Bridge)
 			if err != nil {
 				logger.WithError(err).Error("failed to get hosts")
+				img.UnRegister()
 				return "", err
 			}
 			hosts = append(hosts, tempHosts...)
 			prefix, err := network.GetPrefix(i.Bridge)
 			if err != nil {
+				img.UnRegister()
 				return "", err
 			}
 			gateWay, err := network.GetGateWay(i.Bridge)
 			if err != nil {
+				img.UnRegister()
 				return "", err
 			}
 			address := make([]string, len(i.Address))
@@ -95,6 +102,7 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 			if len(address) == 0 {
 				addr, err := network.AllocateIP(i.Bridge, req.Name, i.Mac)
 				if err != nil {
+					img.UnRegister()
 					logger.WithError(err).Error("failed to get ip")
 					return "", err
 				}
@@ -103,6 +111,7 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 				for index, addr := range i.Address {
 					err := network.RegisterIP(i.Bridge, req.Name, net.ParseIP(addr.Ip), i.Mac)
 					if err != nil {
+						img.UnRegister()
 						return "", err
 					}
 					address[index] = fmt.Sprintf("%s/%d", addr.Ip, prefix)
@@ -127,6 +136,7 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 		for index, v := range req.Volumes {
 			vo, err := volume.Open(v.Source)
 			if err != nil {
+				img.UnRegister()
 				return "", err
 			}
 			flag := machine.ReadPermission
@@ -152,22 +162,26 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 			allProtocol := false
 			if len(tmp) == 1 {
 				if !proxy.IsPort(tmp[0]) {
+					img.UnRegister()
 					return "", fmt.Errorf("error exposed-ports")
 				}
 				allProtocol = true
 				dstPort = tmp[0]
 			} else if len(tmp) == 2 {
 				if !proxy.IsPort(tmp[0]) || !(tmp[1] == "tcp" || tmp[1] == "udp") {
+					img.UnRegister()
 					return "", fmt.Errorf("error exposed-ports")
 				}
 				dstPort = tmp[0]
 				protocol = tmp[1]
 			} else {
+				img.UnRegister()
 				return"", fmt.Errorf("error exposed-ports")
 			}
 
 			for _, portBind := range portBinds.PortBindings {
 				if !proxy.IsPort(portBind.HostPort) || !proxy.IsSrcIP(portBind.HostIp) {
+					img.UnRegister()
 					return "", fmt.Errorf("error exposed-ports")
 				}
 				if !allProtocol {
@@ -195,6 +209,7 @@ func createMachine (req *pb.CreateMachineReq) (string, error) {
 
 	err = factory.Create()
 	if err != nil {
+		img.UnRegister()
 		logger.WithError(err).Error("failed to create the machine")
 		return "", err
 	}

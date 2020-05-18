@@ -451,3 +451,13 @@ func (m *Base) ConnectNetWork(nw *Network) error {
 func (m *Base) GetName() string {
 	return m.Name
 }
+
+func CheckExist(id string) bool {
+	machineInfos := ListMachine()
+	for _, machineInfo := range machineInfos {
+		if machineInfo.ID == id && machineInfo.Name == id {
+			return true
+		}
+	}
+	return false
+}
