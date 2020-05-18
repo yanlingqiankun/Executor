@@ -105,7 +105,7 @@ func (ipam *IPAM) allocate(subnet *net.IPNet) (ip net.IP, err error) {
 
 	if sub, exist := (ipam.Subnets)[subnet.String()]; !exist {
 		//(ipam.Subnets)[subnet.String()] = strings.Repeat("0", 1<<uint8(size-one))
-		return nil, fmt.Errorf("the subnet pool net exits")
+		return nil, fmt.Errorf("the subnet pool not exits")
 	} else {
 		temp = sub + "2"
 	}

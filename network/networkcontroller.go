@@ -177,21 +177,23 @@ func CreateNetwork(name, subnet, gateway string, isIsolated bool) error {
 		IsIsolated: isIsolated,
 	}
 	networks[name] = nw
-	if err := nw.dump(defaultNetworkPath); err != nil {
-		return fmt.Errorf("failed to save network information :", err.Error())
-	}
 	if link, _ := netlink.LinkByName(nw.Driver); link != nil {
 		return fmt.Errorf("Warning", nw.Name, " exists")
 	}
 	if err := ipAllocator.register(cidr, gatewayIP); err != nil {
 		logger.WithError(err).Errorf("failed to create network %s", name)
-		DeleteNetwork(name, true)
+		delete(networks, name)
+		deleteBridge(nw)
 		return err
 	}
 	if err := nw.createBridge(); err != nil {
 		logger.WithError(err).Errorf("failed to create network %s", name)
-		DeleteNetwork(name, true)
+		delete(networks, name)
+		deleteBridge(nw)
 		return err
+	}
+	if err := nw.dump(defaultNetworkPath); err != nil {
+		return fmt.Errorf("failed to save network information :", err.Error())
 	}
 	return nil
 }
